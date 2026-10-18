@@ -264,3 +264,106 @@ export interface RespostasObservatorio {
   territorio: TerritorioResposta;
   pecuaria: PecuariaResposta;
 }
+
+// ---- Crédito rural (SICOR, Banco Central; ADR 0036) ----
+
+export type RotaCredito = "resumo" | "serie" | "ranking" | "por-produto";
+
+export interface MunicipioRef {
+  codigo_ibge: string;
+  nome: string;
+  slug: string;
+}
+
+export interface FiltrosCredito {
+  valores: { ano: number | null; municipio: MunicipioRef | null; programa: string | null; finalidade: string | null };
+  opcoes: { anos: number[]; municipios: MunicipioRef[]; programas: Opcao[]; finalidades: Opcao[] };
+}
+
+export interface QualidadeCredito {
+  ano_completo: boolean | null;
+  meses_com_dado: number;
+  /** "2026-09" */
+  mes_mais_recente: string | null;
+  avisos: string[];
+}
+
+export interface MetaCredito {
+  fontes: { fonte: string; url_fonte: string; licenca: string }[];
+  atualizado_em: string | null;
+}
+
+// metricas/series podem vir vazias (200 com aviso), por isso Partial.
+interface BaseCredito<M, S> {
+  filtros: FiltrosCredito;
+  metricas: Partial<M>;
+  series: Partial<S>;
+  qualidade: QualidadeCredito;
+  meta: MetaCredito;
+}
+
+export interface DivisaoCredito extends Opcao {
+  valor: number;
+  contratos: number;
+  participacao: number | null;
+}
+
+export type CreditoResumo = BaseCredito<
+  {
+    valor_total: number;
+    contratos: number;
+    valor_medio: number | null;
+    valor_pronaf: number;
+    participacao_pronaf_pct: number | null;
+    valor_ano_anterior: number | null;
+    variacao_pct: number | null;
+    area_custeio_ha: number | null;
+  },
+  { programas: DivisaoCredito[]; finalidades: DivisaoCredito[]; atividades: DivisaoCredito[] }
+> & { texto: TextoObservatorio };
+
+export interface MesCredito {
+  mes: number;
+  valor: number | null;
+  contratos: number | null;
+  valor_pronaf: number | null;
+  valor_ano_anterior: number | null;
+}
+
+export interface AnoCredito {
+  ano: number;
+  valor: number;
+  contratos: number;
+  valor_pronaf: number;
+  meses: number;
+  completo: boolean;
+}
+
+export type CreditoSerie = BaseCredito<Record<string, never>, { mensal: MesCredito[]; anual: AnoCredito[] }>;
+
+export interface MunicipioCredito extends MunicipioRef {
+  posicao: number;
+  microrregiao: string;
+  valor: number;
+  contratos: number;
+  valor_por_contrato: number | null;
+  participacao_pct: number | null;
+}
+
+export type CreditoRanking = BaseCredito<{ valor_total: number; top5_pct: number | null }, { municipios: MunicipioCredito[] }>;
+
+export interface ProdutoCredito extends Opcao {
+  atividade: string | null;
+  valor: number;
+  participacao_pct: number | null;
+  area_ha: number | null;
+}
+
+export type CreditoProdutos = BaseCredito<{ valor_total: number; produtos: number }, { produtos: ProdutoCredito[] }>;
+
+export interface RespostasCredito {
+  resumo: CreditoResumo;
+  serie: CreditoSerie;
+  ranking: CreditoRanking;
+  "por-produto": CreditoProdutos;
+}

@@ -8,7 +8,9 @@ import type {
   Municipio,
   ProdutoResumo,
   RankingResposta,
+  RespostasCredito,
   RespostasObservatorio,
+  RotaCredito,
   SerieResposta,
 } from "./api-types";
 
@@ -57,6 +59,8 @@ export const api = {
   analise: (query: string) => request<AnaliseResposta>(`${API_BASE}/analise?${query}`),
   observatorio: <B extends BlocoObservatorio>(bloco: B, query: string) =>
     request<RespostasObservatorio[B]>(`${API_BASE}/observatorio/${bloco}${query ? `?${query}` : ""}`),
+  credito: <R extends RotaCredito>(rota: R, query: string) =>
+    request<RespostasCredito[R]>(`${API_BASE}/credito/${rota}${query ? `?${query}` : ""}`),
 };
 
 export const relatorioUrl = (query: string) => `${API_BASE}/relatorio.pdf?${query}`;
