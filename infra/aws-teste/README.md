@@ -46,6 +46,22 @@ sudo tail -f /var/log/faperon-atualizar.log        # atualizações
 sudo /usr/local/bin/faperon-backup                 # cópia do banco agora
 ```
 
+## Usuários do sistema (ADR 0035)
+
+O login da área do sistema é de verdade: as contas ficam no Postgres. Pela sessão do Session Manager (veja Manutenção), dentro de `/opt/faperon`, com os mesmos arquivos de compose que o `atualizar.sh` usa:
+
+```bash
+cd /opt/faperon
+C="sudo docker compose -f docker-compose.yml -f /etc/faperon/docker-compose.teste.yml"
+# 5 usuários de demonstração (carla, marcos, ana, joao e luiza @exemplo.faperon.br), todos com a mesma senha
+$C exec -e DEMO_SENHA='<senha com 10+ caracteres>' api python manage.py carregar_usuarios_demo
+
+# administrador: imprime uma senha temporária uma única vez; a pessoa troca no primeiro acesso
+$C exec api python manage.py criar_admin --email <e-mail> --nome "<Nome>"
+```
+
+Rodar de novo o `carregar_usuarios_demo` volta a senha da demonstração. Para o "Entrar com Google", defina `GOOGLE_CLIENT_ID` no `.env.local` da máquina e `NEXT_PUBLIC_GOOGLE_CLIENT_ID` no build da imagem do web (workflow do fork). Contas de pessoas reais só com o aval do encarregado de dados (seção abaixo).
+
 ## Apagar tudo
 
 Os recursos levam a etiqueta `Project=faperon-teste`. Apague-os nesta ordem:

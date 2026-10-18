@@ -315,3 +315,35 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Causa:** o `.env` fica fora do git (o compose exige o arquivo), e um worktree novo não o tem.
 - **Solução ou contorno:** `cp .env.example .env` no worktree. É suficiente para os testes, que criam o próprio banco `test_*`.
 - **Status:** contornado.
+
+## Login de verdade (18/10/2026, ADR 0035)
+
+### Com sessão, o `ScopedRateThrottle` do DRF passa a contar por usuário
+- **Sintoma:** risco de os limites do Zétele do sistema deixarem de ser por IP depois de exigir login (o teste "outro IP passa" quebraria).
+- **Causa:** o `ScopedRateThrottle` usa `request.user.pk` quando há usuário autenticado e só cai no IP para anônimos.
+- **Solução ou contorno:** `usuarios/throttles.py` tem o `ScopedPorIPThrottle`, que sempre usa o IP (último X-Forwarded-For, ADR 0023). O Zétele e o login usam esse.
+- **Status:** resolvido.
+
+### O `APIClient` não confere o CSRF
+- **Sintoma:** testes de POST com sessão passam mesmo sem o cabeçalho `X-CSRFToken`.
+- **Causa:** o cliente de teste marca o pedido para pular o CSRF.
+- **Solução ou contorno:** os testes que provam o CSRF usam `APIClient(enforce_csrf_checks=True)` (fixture `navegador` em `tests/test_usuarios_conta.py`).
+- **Status:** contornado.
+
+### `Set-Cookie` no proxy do Next
+- **Sintoma:** com `headers.get("set-cookie")`, os dois cookies do login (sessão e CSRF) viriam juntos numa linha, separados por vírgula, e o navegador leria errado.
+- **Causa:** o `Headers` do fetch junta valores repetidos.
+- **Solução ou contorno:** `res.headers.getSetCookie()` e um `append` por cookie (teste em `proxy.test.ts`).
+- **Status:** resolvido.
+
+### `userEvent.setup()` troca a área de transferência
+- **Sintoma:** o espião em `navigator.clipboard.writeText` definido antes do `setup()` nunca era chamado no teste do "Copiar".
+- **Causa:** o user-event instala uma área de transferência própria no `setup()`.
+- **Solução ou contorno:** criar o espião depois: `const user = userEvent.setup(); vi.spyOn(navigator.clipboard, "writeText")`.
+- **Status:** contornado.
+
+### Worktree e o compose dividem o projeto `faperon`
+- **Sintoma:** `docker compose build api-dev` numa worktree regrava a imagem `faperon-api-dev` do checkout principal, e o `pytest` de dois agentes usaria o mesmo banco `test_faperon`.
+- **Causa:** o `docker-compose.yml` fixa `name: faperon`, então toda worktree usa o mesmo projeto, as mesmas imagens e o mesmo Postgres.
+- **Solução ou contorno:** para dependência nova, construir uma imagem com nome próprio (`docker build --target dev -t faperon-api-dev-<tarefa> apps/api`) e rodar com `docker run --network faperon_default --env-file .env -e POSTGRES_HOST=db -e POSTGRES_DB=faperon_<tarefa>`. O banco de teste vira `test_faperon_<tarefa>`.
+- **Status:** contornado.

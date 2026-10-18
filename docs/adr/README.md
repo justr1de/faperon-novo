@@ -36,3 +36,4 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0032](0032-zetele-em-dois-canais-com-rag-proprio.md) — Zétele em dois canais (site público e sistema), cada um com RAG, banco e limites próprios
 - [0033](0033-servidor-de-teste-no-brasil-preparado-para-o-whatsapp.md) — Servidor de teste próprio no Brasil (AWS São Paulo), preparado para a integração com o WhatsApp
 - [0034](0034-zetele-do-sistema-ouve-e-fala.md) — Zétele do sistema ouve e fala: Groq para ouvir, Gemini para falar, fornecedor plugável
+- [0035](0035-usuarios-reais-e-login-de-verdade.md) — Usuários reais no banco e login de verdade na área do sistema
