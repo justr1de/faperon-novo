@@ -189,6 +189,52 @@ Somas e composições entre produtos contam o café da PAM uma vez só: o "Café
 
 A `series.composicao` mantém o agregado e tira o subconjunto, pela mesma lógica do café: `galinaceos-total` fica e `galinaceos-galinhas` sai; `suino-total` fica e `suino-matrizes-de-suinos` sai. Assim a soma não esconde cabeças (em Rondônia o total de galináceos é cerca de 3 vezes o de galinhas).
 
+## Crédito rural (SICOR)
+
+Quatro rotas somente de leitura para a página `/credito-rural`, com o crédito rural contratado em Rondônia segundo a Matriz de Dados do Crédito Rural (SICOR) do Banco Central. Detalhes e motivos: ADR 0036.
+
+Parâmetros (todos opcionais e iguais nas quatro rotas):
+
+| Parâmetro | Valores | Padrão |
+|---|---|---|
+| `ano` | inteiro de 2000 a 2100; só anos com dado (fora deles, 400 com `campos: {"ano": "use um ano entre 2018 e 2026"}`) | o último ano com dado |
+| `municipio` | código IBGE de 7 dígitos ou slug do nome (`ji-parana`, `alta-floresta-doeste`); inexistente → 404 | Rondônia inteira |
+| `programa` | `pronaf`, `pronamp` ou `demais` (outros programas e sem programa) | todos |
+| `finalidade` | `custeio`, `investimento`, `comercializacao` ou `industrializacao` | todas |
+
+Forma comum:
+
+```json
+{
+  "filtros": {
+    "valores": {"ano": 2026, "municipio": null, "programa": null, "finalidade": null},
+    "opcoes": {"anos": [2018, 2026], "municipios": [{"codigo_ibge": "1100122", "nome": "Ji-Paraná", "slug": "ji-parana"}],
+               "programas": [{"slug": "pronaf", "nome": "Pronaf"}], "finalidades": [{"slug": "custeio", "nome": "Custeio"}]}
+  },
+  "metricas": {},
+  "series": {},
+  "qualidade": {"ano_completo": false, "meses_com_dado": 9, "mes_mais_recente": "2026-09", "avisos": ["2026 tem dados de janeiro a setembro: ..."]},
+  "meta": {"fontes": [{"fonte": "Banco Central do Brasil, Matriz de Dados do Crédito Rural (SICOR)", "url_fonte": "https://www.bcb.gov.br/estabilidadefinanceira/micrrural", "licenca": "ODbL"}],
+           "atualizado_em": "2026-10-18T12:00:00Z"}
+}
+```
+
+- Valores em **reais nominais** (sem IPCA). `filtros.valores.municipio` é `{codigo_ibge, nome, slug}` ou `null`.
+- **Período comparável:** o ano vai até o último mês publicado no estado (`qualidade.meses_com_dado`); `qualidade.ano_completo` é `false` antes de dezembro, com um aviso. `mes_mais_recente` é o último mês da série inteira (`AAAA-MM`).
+- **Ausente nunca é zero:** município sem contrato num mês já publicado tem valor `0` (zero de verdade); mês ainda não publicado é `null`. Sem nenhuma carga ainda, as quatro rotas devolvem 200 com `metricas` e `series` vazios, `ano: null` e o aviso "Os dados do crédito rural ainda não foram carregados…".
+
+`GET /api/v1/credito/resumo`:
+
+- `metricas`: `valor_total`, `contratos`, `valor_medio` (`null` sem contratos), `valor_pronaf`, `participacao_pronaf_pct` (Pronaf no total do recorte **sem** o filtro de programa; `null` com total zero), `valor_ano_anterior` e `variacao_pct` (mesmos meses do ano anterior, mesmo recorte; `null` sem o ano anterior), `area_custeio_ha`.
+- `series.programas`, `series.finalidades` e `series.atividades`: `[{slug, nome, valor, contratos, participacao}]`, sempre com todos os itens (zero quando não houve contrato). `programas` ignora o filtro de programa.
+- `texto`: `{manchete, como_ler}` (frases prontas).
+
+`GET /api/v1/credito/serie`: `series.mensal` são os 12 meses do ano, `[{mes, valor, contratos, valor_pronaf, valor_ano_anterior}]` (`null` depois do último mês publicado); `series.anual` é `[{ano, valor, contratos, valor_pronaf, meses, completo}]` para todos os anos com dado. `metricas` vem `{}`.
+
+`GET /api/v1/credito/ranking`: `series.municipios` tem os 52 municípios em ordem de valor, `[{posicao, codigo_ibge, nome, slug, microrregiao, valor, contratos, valor_por_contrato, participacao_pct}]` (`valor_por_contrato` é `null` sem contratos). O filtro `municipio` não se aplica. `metricas`: `valor_total`, `top5_pct`.
+
+`GET /api/v1/credito/por-produto`: `series.produtos` são os 12 produtos de maior valor mais um item `{slug: "demais", nome: "Demais produtos (N)"}` com o resto, `[{slug, nome, atividade, valor, participacao_pct, area_ha}]` (custeio e investimento; o BCB não publica contratos por produto). Com `finalidade=comercializacao` ou `industrializacao`, `series` vem `{}` e o motivo vai em `qualidade.avisos`. `metricas`: `valor_total`, `produtos` (quantos produtos distintos).
+
 ## Zétele (assistente do site)
 
 Detalhes e motivos: ADR 0029, ADR 0030 e ADR 0032 (canal público).

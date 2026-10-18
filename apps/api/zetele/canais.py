@@ -25,7 +25,13 @@ class Canal:
 
 PUBLICO = Canal(
     nome="publico",
-    paginas=("/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel"),
+    paginas=(
+        "/",
+        "/central-de-inteligencia",
+        "/central-de-inteligencia/observatorio",
+        "/painel",
+        "/credito-rural",
+    ),
     so_orientacao=frozenset({"/"}),
     ajuste_limite="ZETELE_LIMITE_DIARIO",
 )

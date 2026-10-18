@@ -31,7 +31,7 @@ const CLARO = { texto: "#14261f", muted: "#46564f", linha: "#d3e1d8", card: "#ff
 const ESCURO = { texto: "#e8f0ec", muted: "#a8bab1", linha: "#2f453b", card: "#172a23", borda: "#172a23", rotuloTreemap: "#0e1c17" };
 
 /** As opções do Observatório trazem as próprias cores do tema (o Grafico não aplica comTemaEscuro nelas). */
-function tema(escuro: boolean) {
+export function tema(escuro: boolean) {
   const t = escuro ? ESCURO : CLARO;
   return {
     ...t,

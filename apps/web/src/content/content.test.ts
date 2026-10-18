@@ -51,12 +51,12 @@ describe("Início e Central", () => {
     expect(INICIO.nosso_agro.titulo).toBe("Nosso Agro");
   });
 
-  it("descreve a Central e as duas portas sem HTML solto", () => {
+  it("descreve a Central e as três portas sem HTML solto", () => {
     expect(CENTRAL.paragrafos.every((p) => !p.includes("<"))).toBe(true);
     expect(CENTRAL.seo.descricao).toContain("Observatório");
     expect(CENTRAL.cta_url).toBe("/painel");
-    expect(CENTRAL.portas.map((p) => p.href)).toEqual(["/painel", "/central-de-inteligencia/observatorio"]);
-    expect(CENTRAL.portas.map((p) => p.rotulo)).toEqual(["Abrir o Painel Agro Analítico", "Abrir o Observatório"]);
+    expect(CENTRAL.portas.map((p) => p.href)).toEqual(["/painel", "/central-de-inteligencia/observatorio", "/credito-rural"]);
+    expect(CENTRAL.portas.map((p) => p.rotulo)).toEqual(["Abrir o Painel Agro Analítico", "Abrir o Observatório", "Abrir o painel de crédito rural"]);
   });
 });
 

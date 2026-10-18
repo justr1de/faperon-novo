@@ -6,6 +6,8 @@ from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 from django.utils import timezone
 
+from credito.carga import atualizar_credito
+from credito.sicor import SicorCliente
 from ingestao.agendador import precisa_ingerir
 from ingestao.models import Carga
 from ingestao.servico import CargaFalhou, executar_carga
@@ -59,16 +61,31 @@ def rodar_ciclo(cliente: SidraCliente) -> int:
     return tentadas
 
 
+def rodar_ciclo_credito(cliente: SicorCliente) -> int:
+    """Atualiza o crédito rural; uma falha aqui nunca derruba a ingestão do IBGE."""
+    try:
+        return atualizar_credito(cliente, timezone.now())
+    except Exception:
+        log.exception("scheduler: atualização do crédito rural falhou")
+        return 0
+
+
 class Command(BaseCommand):
-    help = "Roda a ingestão ao subir (se a última carga tem mais de 3 dias) e depois a cada 3 dias."
+    help = (
+        "Roda a ingestão ao subir (se a última carga tem mais de 3 dias) e depois a cada 3 dias; "
+        "o crédito rural (SICOR) é conferido uma vez por dia."
+    )
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument("--uma-vez", action="store_true", help="faz só uma passada e sai")
 
     def handle(self, *args: Any, **opts: Any) -> None:
         cliente = SidraCliente()
+        sicor = SicorCliente()
         while True:
             close_old_connections()
+            # O crédito vem antes: num servidor novo a série completa leva poucos minutos (ADR 0036).
+            rodar_ciclo_credito(sicor)
             rodar_ciclo(cliente)
             if opts["uma_vez"]:
                 return

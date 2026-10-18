@@ -1,4 +1,4 @@
-import { BarChart3, FileText, GitCompareArrows, Lightbulb, ShieldCheck, Trophy, type LucideIcon } from "lucide-react";
+import { BarChart3, FileText, GitCompareArrows, HandCoins, Lightbulb, ShieldCheck, Trophy, type LucideIcon } from "lucide-react";
 import type { NomeIcone } from "@/content/central";
 
 const ICONES: Record<NomeIcone, LucideIcon> = {
@@ -8,6 +8,7 @@ const ICONES: Record<NomeIcone, LucideIcon> = {
   insight: Lightbulb,
   pdf: FileText,
   shield: ShieldCheck,
+  credito: HandCoins,
 };
 
 export function Icone({ nome, className }: { nome: NomeIcone; className?: string }) {

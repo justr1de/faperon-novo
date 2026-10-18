@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "indicadores",
     "analise",
     "observatorio",
+    "credito",
     "zetele",
     "usuarios",
     "rest_framework",

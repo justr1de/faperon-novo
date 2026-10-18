@@ -25,7 +25,7 @@ export default function CentralPage() {
         </div>
       </section>
 
-      <Revelar as="section" aria-label="Escolha por onde começar" className="container mt-12 grid gap-6 md:grid-cols-2">
+      <Revelar as="section" aria-label="Escolha por onde começar" className="container mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {c.portas.map((p) => (
           <article key={p.href} className="flex flex-col rounded-2xl border border-line bg-card p-8 shadow-sm">
             <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand text-white">

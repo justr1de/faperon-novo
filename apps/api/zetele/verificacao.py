@@ -19,6 +19,7 @@ ROTAS_PERMITIDAS = frozenset(
         "/central-de-inteligencia",
         "/central-de-inteligencia/observatorio",
         "/painel",
+        "/credito-rural",
         "/sobre",
         "/informativos-tecnicos",
         "/noticias",
@@ -40,7 +41,13 @@ ROTAS_PERMITIDAS = frozenset(
     }
 )
 HOSTS_EXTERNOS = frozenset(
-    {"sidra.ibge.gov.br", "www.faperon.com.br", "sistemafaperon.org.br", "www.cnabrasil.org.br"}
+    {
+        "sidra.ibge.gov.br",
+        "www.bcb.gov.br",
+        "www.faperon.com.br",
+        "sistemafaperon.org.br",
+        "www.cnabrasil.org.br",
+    }
 )
 # Qualquer número cabe em wa.me: só o WhatsApp oficial (CONTATO.whatsapp no front) ou o que a
 # ferramenta devolveu.
