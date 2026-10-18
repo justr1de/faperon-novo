@@ -41,7 +41,7 @@ describe("Zétele: conteúdo", () => {
   });
 
   it("tem as perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
-    expect(PERGUNTAS).toHaveLength(28);
+    expect(PERGUNTAS).toHaveLength(29);
     for (const p of PERGUNTAS.filter((q) => q.tipo === "estatica")) {
       expect(p.resposta, p.id).toBeTruthy();
       expect([...ROTAS, ...PAGINAS_COM_ZETELE], p.id).toContain(p.href!.split("?")[0]);
