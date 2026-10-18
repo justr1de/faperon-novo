@@ -107,3 +107,67 @@ jobs:
             ${{ steps.ecr.outputs.registry }}/faperon-teste/web:${{ needs.sincronizar.outputs.sha }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
+
+  # Produção: segue o branch producao do fork, que só muda quando uma versão testada é promovida
+  # (infra/aws-teste/promover-producao.sh). Imagens próprias, com o SITE_URL de produção.
+  producao:
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - id: ref
+        run: |
+          sha=$(git ls-remote "https://github.com/${{ github.repository }}.git" refs/heads/producao | cut -f1)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - if: steps.ref.outputs.sha != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_SERVIDOR_TESTE }}
+          aws-region: ${{ env.AWS_REGION }}
+      - if: steps.ref.outputs.sha != ''
+        id: falta
+        env:
+          SHA: ${{ steps.ref.outputs.sha }}
+        run: |
+          if aws ecr describe-images --repository-name faperon-producao/web --image-ids imageTag="$SHA" > /dev/null 2>&1 \
+            && aws ecr describe-images --repository-name faperon-producao/api --image-ids imageTag="$SHA" > /dev/null 2>&1; then
+            echo "construir=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "construir=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.falta.outputs.construir == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.sha }}
+      - if: steps.falta.outputs.construir == 'true'
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - if: steps.falta.outputs.construir == 'true'
+        uses: docker/setup-buildx-action@v3
+      - if: steps.falta.outputs.construir == 'true'
+        name: API
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          target: prod
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/faperon-producao/api:producao
+            ${{ steps.ecr.outputs.registry }}/faperon-producao/api:${{ steps.ref.outputs.sha }}
+          cache-from: type=gha,scope=api
+      - if: steps.falta.outputs.construir == 'true'
+        name: Web
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/web
+          platforms: linux/arm64
+          push: true
+          build-args: |
+            SITE_URL=${{ vars.SITE_URL_SERVIDOR_PRODUCAO }}
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/faperon-producao/web:producao
+            ${{ steps.ecr.outputs.registry }}/faperon-producao/web:${{ steps.ref.outputs.sha }}
+          cache-from: type=gha,scope=web-producao
+          cache-to: type=gha,scope=web-producao,mode=max
