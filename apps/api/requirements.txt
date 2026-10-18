@@ -7,3 +7,4 @@ whitenoise==6.12.0
 weasyprint==70.0
 requests==2.34.2
 anthropic==1.15.0
+google-auth==2.62.0

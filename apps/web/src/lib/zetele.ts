@@ -1,5 +1,6 @@
 import { areaDaPagina, type PaginaComZetele } from "@/content/zetele";
 import { API_BASE } from "./api";
+import { cabecalhoCsrf } from "./sistema/conta";
 
 export interface FonteZetele {
   rotulo: string;
@@ -62,7 +63,8 @@ export async function perguntar(
   try {
     const r = await fetch(`${baseDoZetele(pagina)}/perguntar`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      // o Zétele do sistema exige a sessão (ADR 0035), e o Django confere o CSRF de quem está logado
+      headers: { "content-type": "application/json", ...cabecalhoCsrf() },
       body: JSON.stringify({ pergunta, historico: historico.slice(-MAX_HISTORICO), pagina }),
     });
     if (r.ok) return { tipo: "ok", resposta: (await r.json()) as RespostaZetele };
@@ -110,7 +112,7 @@ export async function ouvirAudio(audio: Blob, pagina: string): Promise<Resultado
   try {
     const corpo = new FormData();
     corpo.append("audio", audio, nomeDoAudio(audio.type));
-    const r = await fetch(`${baseDoZetele(pagina)}/ouvir`, { method: "POST", body: corpo });
+    const r = await fetch(`${baseDoZetele(pagina)}/ouvir`, { method: "POST", body: corpo, headers: cabecalhoCsrf() });
     if (r.ok) {
       const { texto } = (await r.json()) as { texto?: string };
       return texto ? { tipo: "ok", texto } : { tipo: "nao_entendi" };
@@ -128,7 +130,7 @@ export async function falarTexto(texto: string, pagina: string): Promise<Resulta
   try {
     const r = await fetch(`${baseDoZetele(pagina)}/falar`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...cabecalhoCsrf() },
       body: JSON.stringify({ texto }),
     });
     if (r.ok) return { tipo: "ok", audio: await r.blob() };

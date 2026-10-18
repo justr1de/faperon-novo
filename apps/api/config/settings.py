@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "analise",
     "observatorio",
     "zetele",
+    "usuarios",
     "rest_framework",
     "drf_spectacular",
     "django.contrib.auth",
@@ -96,9 +97,16 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 10},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+# Login do sistema pelo e-mail (ADR 0035)
+AUTHENTICATION_BACKENDS = ["usuarios.autenticacao.BackendPorEmail"]
 
 LANGUAGE_CODE = "pt-br"
 TIME_ZONE = "America/Porto_Velho"
@@ -125,7 +133,8 @@ CACHES = {
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
-    # API pública e somente leitura: sem autenticação de propósito. Se surgir login, mude aqui, não view a view.
+    # A API pública (Painel, Observatório, Zétele do site) continua sem autenticação. As rotas da área
+    # logada (auth, usuários e Zétele do sistema, ADR 0035) declaram na view a sessão e a permissão.
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -142,6 +151,8 @@ REST_FRAMEWORK = {
         # voz do Zétele do sistema (ouvir e falar dividem o mesmo limite; ADR 0034)
         "zetele_voz": os.environ.get("ZETELE_VOZ_RATE_LIMIT", "10/min"),
         "zetele_voz_global": os.environ.get("ZETELE_VOZ_GLOBAL_RATE_LIMIT", "30/min"),
+        # entrar, entrar com Google e trocar a senha, por IP (o bloqueio por falhas é à parte)
+        "auth": os.environ.get("AUTH_RATE_LIMIT", "10/min"),
     },
     "EXCEPTION_HANDLER": "indicadores.api.erros.tratador_de_excecoes",
     "NUM_PROXIES": int(os.environ.get("NUM_PROXIES", "1")),
@@ -178,6 +189,18 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "SAMEORIGIN"
 SESSION_COOKIE_HTTPONLY = True
+# Sessão do sistema (ADR 0035): cookies Secure fora do modo de desenvolvimento (o site público é HTTPS).
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_AGE = int(os.environ.get("SESSAO_HORAS", "12")) * 3600
+# O front lê o csrftoken do cookie e o manda no cabeçalho X-CSRFToken: o cookie não pode ser HttpOnly.
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# Login com o Google (Gmail da equipe): sem o ID do cliente OAuth, o botão some e a rota responde 503.
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+# Senha dos 5 usuários de demonstração (manage.py carregar_usuarios_demo); vazia, o comando recusa.
+DEMO_SENHA = os.environ.get("DEMO_SENHA", "")
 
 LOGGING = {
     "version": 1,

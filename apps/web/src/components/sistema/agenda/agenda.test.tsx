@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
+import { gravar, ler } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { hojeISO } from "@/lib/sistema/datas";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import type { Evento } from "@/lib/sistema/tipos";
@@ -12,11 +13,10 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePat
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
 });
 
 function renderAgenda(quem: string) {
-  gravarSessao(quem);
+  entrarComo(quem);
   return render(
     <SistemaProvider>
       <Agenda />

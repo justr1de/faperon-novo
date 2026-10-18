@@ -9,6 +9,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # robots.txt, sitemap.xml e metadataBase são pré-renderizados no build: a URL pública tem de existir aqui.
 ARG SITE_URL=http://localhost:3000
 ENV SITE_URL=$SITE_URL
+# Login com o Google (ADR 0035): o Next fixa NEXT_PUBLIC_* no build; vazio, o botão não aparece.
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public && npm run build

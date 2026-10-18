@@ -224,6 +224,41 @@ def dados_observatorio(municipios: list[Municipio], carga: Carga) -> dict[str, P
     return {"soja": soja, "cafe": cafe, "bovino": bovino, "leite": leite, "vacas": vacas}
 
 
+SENHA_DE_TESTE = "senha-de-teste-123"
+
+
+@pytest.fixture
+def criar_conta(db: None) -> Any:
+    """Cria uma conta com perfil (por padrão a Carla, sem papéis) e devolve o User."""
+    from usuarios.servicos import criar_usuario
+
+    def criar(
+        email: str = "carla@exemplo.faperon.br",
+        nome: str = "Carla Mendes",
+        codigo: str | None = "carla",
+        area: str = "Comunicação",
+        senha: str = SENHA_DE_TESTE,
+        ativo: bool = True,
+        **papeis: bool,
+    ) -> Any:
+        usuario, _ = criar_usuario(
+            email=email, nome=nome, area=area, codigo=codigo, senha=senha, papeis=papeis
+        )
+        if not ativo:
+            usuario.is_active = False
+            usuario.save(update_fields=["is_active"])
+        return usuario
+
+    return criar
+
+
+@pytest.fixture
+def api_logado(api: APIClient, criar_conta: Any) -> APIClient:
+    """Cliente com a sessão de uma pessoa da equipe (rotas do sistema exigem login)."""
+    api.force_login(criar_conta())
+    return api
+
+
 @pytest.fixture(autouse=True)
 def sem_chave_da_anthropic(request: pytest.FixtureRequest, settings: Any) -> None:
     """Nenhum teste fala com a Anthropic de verdade, exceto os marcados com llm."""

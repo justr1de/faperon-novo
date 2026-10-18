@@ -2,7 +2,6 @@
 
 import { Paperclip, Plus } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
@@ -26,9 +25,8 @@ const corStatus: Record<StatusDespesa, string> = {
   devolvida: "bg-danger-soft text-danger-ink",
 };
 
-const nomeDe = (id: string) => FUNCIONARIOS.find((f) => f.id === id)?.nome ?? id;
-
 function LinhaDespesa({ d, mostrarQuem, acoes }: { d: Despesa; mostrarQuem: boolean; acoes?: React.ReactNode }) {
+  const { nomeDe } = useSistema();
   return (
     <li className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-line bg-card p-3 text-sm">
       <div className="min-w-0">

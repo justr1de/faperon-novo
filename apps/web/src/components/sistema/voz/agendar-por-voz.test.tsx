@@ -1,7 +1,7 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import { Agenda } from "../agenda/agenda";
 import { Espacos } from "../espacos/espacos";
@@ -38,14 +38,13 @@ function responder(corpo: unknown, status = 200) {
 }
 
 function renderCom(componente: React.ReactNode) {
-  gravarSessao("carla");
+  entrarComo("carla");
   return render(<SistemaProvider>{componente}</SistemaProvider>);
 }
 
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
 });
 afterEach(() => {
   vi.unstubAllGlobals();

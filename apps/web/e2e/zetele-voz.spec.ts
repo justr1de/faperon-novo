@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { entrar as entrarComSenha } from "./entrar";
 
 // Microfone falso do Chromium (tom de teste) e áudio sem exigir gesto: nada de dispositivo real.
 test.use({
@@ -47,14 +48,7 @@ async function simularApiDaVoz(page: Page) {
 
 async function entrar(page: Page) {
   await page.addInitScript(() => window.sessionStorage.setItem("zetele-saudou", "1"));
-  await page.goto("/login");
-  if (await page.getByLabel("E-mail").isVisible().catch(() => false)) {
-    await page.getByLabel("E-mail").fill("user@faperon.br");
-    await page.getByLabel("Senha", { exact: true }).fill("Senha@123");
-    await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  }
-  await page.getByRole("button", { name: "Entrar como Carla Mendes" }).click();
-  await expect(page).toHaveURL(/\/sistema$/);
+  await entrarComSenha(page, "carla@exemplo.faperon.br");
 }
 
 test("Zétele do sistema: pergunta gravada vira texto para conferir e a resposta é lida em voz alta", async ({ page }) => {

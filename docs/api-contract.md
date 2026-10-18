@@ -256,6 +256,37 @@ Nas duas rotas:
   - `ocupado`.
 - O proxy do Next aceita multipart de até 3 MB + 64 KB só no `/ouvir`.
 
+## Login e contas da área do sistema
+
+Detalhes e motivos: ADR 0035. Sessão do Django: cookie `sessionid` (HttpOnly, `SameSite=Lax`, `Secure` fora do `DEBUG`). Todo `POST` e `PATCH` manda o cabeçalho `X-CSRFToken` com o valor do cookie `csrftoken`. O proxy do Next repassa só esses dois cookies e devolve o `Set-Cookie`. Sem sessão, as rotas abaixo (menos `csrf`, `entrar` e `google`) respondem `401`; com senha temporária, só `eu`, `sair` e `trocar-senha` respondem, e as demais dão `403`. Erros no formato de sempre: `{"erro", "campos"}`.
+
+Perfil (`eu`, `entrar`, `google`, `trocar-senha`):
+
+```json
+{"codigo": "carla", "nome": "Carla Mendes", "email": "carla@exemplo.faperon.br", "area": "Comunicação",
+ "telefone": "", "administrador": false, "coordenador": false, "gestor_frota": false,
+ "gestor_espacos": false, "gestor_contas": false, "demonstracao": true, "precisa_trocar_senha": false}
+```
+
+`area` entre `Administrativo`, `Comunicação`, `Presidência`, `Sindical` e `Técnica`. `telefone` vazio ou E.164 (`+5569999990000`).
+
+| Rota | O que faz |
+|---|---|
+| `GET /api/v1/auth/csrf` | `{"csrf": "..."}` e grava o cookie `csrftoken` |
+| `POST /api/v1/auth/entrar` `{"email", "senha"}` | `200` perfil e sessão nova. `400 {"erro": "E-mail ou senha incorretos."}`, exista ou não a conta. `429` com `Retry-After: 900` depois de 5 falhas do e-mail (ou 20 do IP) em 15 min, e também acima de 10/min por IP (`AUTH_RATE_LIMIT`). `403` sem CSRF |
+| `POST /api/v1/auth/google` `{"credential"}` | ID token do Google Identity Services. `200` perfil; `400` token inválido ou e-mail não verificado; `403` e-mail sem conta ativa (não cria conta); `503 {"motivo": "google_desligado"}` sem `GOOGLE_CLIENT_ID` |
+| `POST /api/v1/auth/sair` | `204` e encerra a sessão |
+| `GET /api/v1/auth/eu` | `200` perfil de quem está logado; `401` sem sessão |
+| `POST /api/v1/auth/trocar-senha` `{"senha_atual", "senha_nova"}` | `200` perfil, com `precisa_trocar_senha: false`. `400` com `campos.senha_atual` ou `campos.senha_nova` (pelo menos 10 caracteres, não comum, não só números, diferente da atual) |
+| `GET /api/v1/usuarios/equipe` | Qualquer pessoa logada: `[{"codigo", "nome", "area", papéis}]` dos ativos, sem e-mail |
+| `GET /api/v1/usuarios` | Administrador: lista com inativos. Cada item é o perfil mais `ativo`, `ultimo_acesso` (ISO ou `null`) e `criado_em` |
+| `POST /api/v1/usuarios` `{"nome", "email", "area", "telefone"?, papéis?}` | Administrador: `201 {"usuario", "senha_temporaria"}`. A senha aparece só aqui. `400 campos.email` se o e-mail já existe (sem diferenciar maiúsculas) |
+| `PATCH /api/v1/usuarios/<codigo>` | Administrador: edição parcial dos mesmos campos. `400` ao tirar o último administrador |
+| `POST /api/v1/usuarios/<codigo>/desativar` e `/reativar` | Administrador: devolve o usuário. `400` ao desativar a si mesmo ou o último administrador. Não há rota para apagar |
+| `POST /api/v1/usuarios/<codigo>/senha-temporaria` | Administrador: `{"senha_temporaria"}` (uma vez) e marca `precisa_trocar_senha` |
+
+O Zétele do sistema (`/api/v1/sistema/zetele/*`) e o `/api/v1/sistema/interpretar` exigem a mesma sessão e o mesmo CSRF. Os limites deles continuam por IP.
+
 ## Saúde
 
 `GET /api/v1/saude` → `{"status": "ok", "banco": "ok"}` (usado pelo healthcheck do Compose).

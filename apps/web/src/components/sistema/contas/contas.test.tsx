@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
+import { gravar, ler } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import type { Despesa } from "@/lib/sistema/tipos";
 import { Contas } from "./contas";
@@ -32,7 +33,6 @@ function despesa(parcial: Partial<Despesa> & Pick<Despesa, "id" | "descricao">):
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
   gravar("contas", [
     despesa({ id: "a", descricao: "Papel A4" }),
     despesa({ id: "b", descricao: "Lanche da reunião", status: "devolvida", observacaoGestor: "Falta nota fiscal." }),
@@ -42,7 +42,7 @@ beforeEach(() => {
 
 function renderContas(quem: string, abaInicial = "minhas") {
   aba = abaInicial;
-  gravarSessao(quem);
+  entrarComo(quem);
   return render(
     <SistemaProvider>
       <Contas />

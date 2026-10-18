@@ -1,8 +1,8 @@
-/** Storage do protótipo: tudo fica no navegador, com prefixo `sistema:`.
+/** Storage do protótipo: os dados dos módulos ficam no navegador, com prefixo `sistema:` (ADR 0031).
+ *  Quem está logado não fica aqui: vem da sessão no servidor (ADR 0035).
  *  Navegador que bloqueia storage (aba privada, política) não quebra: cai para memória da página. */
 
 const PREFIXO = "sistema:";
-const CHAVE_SESSAO = `${PREFIXO}sessao`;
 const memoria = new Map<string, string>();
 // chaves cuja última gravação não coube no storage (cota cheia): a versão certa está na memória
 const soNaMemoria = new Set<string>();
@@ -13,14 +13,6 @@ export const ARMAZENAMENTO_CHEIO = "sistema:armazenamento-cheio";
 function local(): Storage | null {
   try {
     return typeof window === "undefined" ? null : window.localStorage;
-  } catch {
-    return null;
-  }
-}
-
-function sessao(): Storage | null {
-  try {
-    return typeof window === "undefined" ? null : window.sessionStorage;
   } catch {
     return null;
   }
@@ -83,28 +75,10 @@ export function gravar(chave: string, valor: unknown): void {
   gravarBruto(local(), PREFIXO + chave, JSON.stringify(valor));
 }
 
-const CHAVE_ACESSO = `${PREFIXO}acesso`;
-
-/** Login do protótipo feito nesta aba (some ao fechar a aba). */
-export function lerAcesso(): boolean {
-  return lerBruto(sessao(), CHAVE_ACESSO) === "1";
-}
-
-export function gravarAcesso(liberado: boolean): void {
-  gravarBruto(sessao(), CHAVE_ACESSO, liberado ? "1" : null);
-}
-
-export function lerSessao(): string | null {
-  return lerBruto(sessao(), CHAVE_SESSAO);
-}
-
-export function gravarSessao(id: string | null): void {
-  gravarBruto(sessao(), CHAVE_SESSAO, id);
-}
-
-/** "Restaurar dados de exemplo": apaga agenda e frota, mantém quem está logado. */
+/** "Restaurar dados de exemplo": apaga agenda, frota e o resto dos módulos (a sessão fica no servidor). */
 export function apagarTudo(): void {
-  for (const chave of [...memoria.keys()]) if (chave !== CHAVE_SESSAO) memoria.delete(chave);
+  memoria.clear();
+  soNaMemoria.clear();
   const storage = local();
   try {
     if (!storage) return;

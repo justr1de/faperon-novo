@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apagarTudo, ARMAZENAMENTO_CHEIO, gravar, gravarSessao, ler, lerSessao } from "./armazenamento";
+import { apagarTudo, ARMAZENAMENTO_CHEIO, gravar, ler } from "./armazenamento";
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -29,21 +29,15 @@ describe("armazenamento do protótipo", () => {
     });
     gravar("agenda:f1", ["evento"]);
     expect(ler("agenda:f1", [])).toEqual(["evento"]);
-    gravarSessao("f2");
-    expect(lerSessao()).toBe("f2");
   });
 
-  it("a sessão fica no sessionStorage e apagarTudo limpa só as chaves do sistema", () => {
-    gravarSessao("f1");
-    expect(window.sessionStorage.getItem("sistema:sessao")).toBe("f1");
+  it("apagarTudo limpa só as chaves do sistema, e quem está logado não fica no navegador", () => {
     gravar("frota", {});
     window.localStorage.setItem("faperon-tema", "escuro");
     apagarTudo();
     expect(window.localStorage.getItem("sistema:frota")).toBeNull();
     expect(window.localStorage.getItem("faperon-tema")).toBe("escuro");
-    expect(lerSessao()).toBe("f1");
-    gravarSessao(null);
-    expect(lerSessao()).toBeNull();
+    expect(window.sessionStorage.length).toBe(0);
   });
 
   it("dado com formato errado volta ao padrão; com a cota cheia, vale o que ficou na memória e a barra é avisada", () => {

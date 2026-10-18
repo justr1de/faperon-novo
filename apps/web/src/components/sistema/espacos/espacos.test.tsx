@@ -2,7 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Agenda } from "@/components/sistema/agenda/agenda";
-import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
+import { gravar, ler } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { hojeISO, somarDias } from "@/lib/sistema/datas";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import type { PedidoEspaco, RegistroHistorico } from "@/lib/sistema/tipos";
@@ -41,7 +42,6 @@ function pedido(parcial: Partial<PedidoEspaco> & Pick<PedidoEspaco, "id" | "nome
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
   gravar("espacos", [
     pedido({ id: "aprovado", nome: "Reunião aprovada", status: "aprovado", funcionarioId: "luiza" }),
     pedido({ id: "pendente", nome: "Pedido da Ana", periodo: "dia_todo", inicio: "08:00", fim: "18:00" }),
@@ -51,7 +51,7 @@ beforeEach(() => {
 
 function renderEspacos(quem: string, abaInicial = "painel") {
   aba = abaInicial;
-  gravarSessao(quem);
+  entrarComo(quem);
   return render(
     <SistemaProvider>
       <Espacos />
@@ -127,7 +127,7 @@ describe("Agendamento de espaços", () => {
     expect(ler<PedidoEspaco[]>("espacos", []).find((p) => p.id === "pendente")).toMatchObject({ status: "recusado", motivoRecusa: "Sala ocupada pela diretoria." });
     unmount();
 
-    gravarSessao("ana");
+    entrarComo("ana");
     render(
       <SistemaProvider>
         <Agenda />

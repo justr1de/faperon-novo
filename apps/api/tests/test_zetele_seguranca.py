@@ -83,6 +83,8 @@ def test_teto_estourado_devolve_a_contagem(
     assert disponibilidade.perguntas_hoje("publico") == 1
 
 
+# a área do sistema exige login (ADR 0035)
+@pytest.mark.usefixtures("api_logado")
 def test_so_aceita_json(api: APIClient, com_chave: None) -> None:
     corpo = {"pergunta": "x", "pagina": "/painel"}
     for rota in (ROTA, "/api/v1/sistema/zetele/perguntar", "/api/v1/sistema/interpretar"):

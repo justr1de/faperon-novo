@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { BotaoTema } from "@/components/site/botao-tema";
 import { buttonVariants } from "@/components/ui/button";
-import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
+import { sairDaConta } from "@/lib/sistema/conta";
 import { MENU, MENU_SISTEMA, ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +21,10 @@ export function SiteHeader() {
   // na área logada o botão do cabeçalho deixa de levar ao login e passa a sair do sistema
   const logado = pathname.startsWith("/sistema");
 
-  function sair() {
-    gravarSessao(null);
-    gravarAcesso(false);
+  // encerra a sessão no servidor (ADR 0035) antes de voltar ao login
+  async function sair() {
     setAberto(false);
+    await sairDaConta();
     router.push(ROTAS.login);
   }
 
@@ -88,7 +88,7 @@ export function SiteHeader() {
 
           {logado ? (
             <div className="flex items-center justify-self-end">
-              <button type="button" onClick={sair} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "shrink-0")}>
+              <button type="button" onClick={() => void sair()} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "shrink-0")}>
                 <LogOut aria-hidden="true" className="h-4 w-4" />
                 Sair
               </button>
@@ -145,7 +145,7 @@ export function SiteHeader() {
             ))}
             <li className="mt-2 border-t border-line pt-2">
               {logado ? (
-                <button type="button" onClick={sair} className={cn(buttonVariants(), BOTAO_ACESSO, "w-full justify-center")}>
+                <button type="button" onClick={() => void sair()} className={cn(buttonVariants(), BOTAO_ACESSO, "w-full justify-center")}>
                   <LogOut aria-hidden="true" className="h-4 w-4" />
                   Sair do sistema
                 </button>

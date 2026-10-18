@@ -23,7 +23,7 @@ describe("Zétele: conteúdo", () => {
   it("aparece no Início, na Central, no Observatório, no Painel e na área logada", () => {
     expect([...PAGINAS_COM_ZETELE].sort()).toEqual([
       "/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel",
-      "/sistema", "/sistema/agenda", "/sistema/atividades", "/sistema/contas", "/sistema/espacos", "/sistema/frotas", "/sistema/indicadores", "/sistema/relatorios",
+      "/sistema", "/sistema/agenda", "/sistema/atividades", "/sistema/contas", "/sistema/espacos", "/sistema/frotas", "/sistema/indicadores", "/sistema/relatorios", "/sistema/usuarios",
     ]);
     expect(ehPaginaComZetele("/sistema/frotas")).toBe(true);
     expect(ehPaginaComZetele("/painel")).toBe(true);

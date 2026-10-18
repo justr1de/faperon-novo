@@ -4,7 +4,6 @@ import { CalendarPlus, ChevronLeft, ChevronRight, KeyRound, Landmark, type Lucid
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { itensDaAgenda, ROTULO_ORIGEM } from "@/lib/sistema/agenda";
 import { dataPorExtenso, formatarDataBR, gradeDoMes, nomeDoMes, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
@@ -109,7 +108,7 @@ function Legenda({ tipos, className }: { tipos: TipoLegenda[]; className?: strin
 }
 
 export function Agenda() {
-  const { funcionario, hoje, eventos, institucionais, frota, pedidos, salvarEvento, excluirEvento } = useSistema();
+  const { funcionario, hoje, eventos, institucionais, frota, pedidos, salvarEvento, excluirEvento, equipe } = useSistema();
   const [visao, setVisao] = useState<"mes" | "lista">("mes");
   const [mes, setMes] = useState(() => ({ ano: Number(hoje.slice(0, 4)), mes0: Number(hoje.slice(5, 7)) - 1 }));
   const [selecionado, setSelecionado] = useState(hoje);
@@ -129,8 +128,8 @@ export function Agenda() {
 
   // o filtro de tag vale para o mês e para a lista
   const itens = useMemo(
-    () => (funcionario ? comTag(itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos, FUNCIONARIOS), tagFiltro) : []),
-    [funcionario, eventos, institucionais, frota, pedidos, tagFiltro],
+    () => (funcionario ? comTag(itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos, equipe), tagFiltro) : []),
+    [funcionario, eventos, institucionais, frota, pedidos, tagFiltro, equipe],
   );
   const porDia = useMemo(() => {
     const mapa = new Map<string, Evento[]>();

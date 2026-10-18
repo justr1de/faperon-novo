@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
+import { gravar, ler } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { hojeISO, somarDias } from "@/lib/sistema/datas";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import type { EstadoFrota } from "@/lib/sistema/tipos";
@@ -32,14 +33,13 @@ const FROTA: EstadoFrota = {
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
   aba = "veiculos";
   gravar("frota", FROTA);
 });
 
 function renderFrotas(quem: string, abaInicial = "veiculos") {
   aba = abaInicial;
-  gravarSessao(quem);
+  entrarComo(quem);
   return render(
     <SistemaProvider>
       <Frotas />

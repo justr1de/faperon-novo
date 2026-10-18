@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
+import { gravar, ler } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { hojeISO } from "@/lib/sistema/datas";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import type { Atividade, RegistroHistorico } from "@/lib/sistema/tipos";
@@ -33,14 +34,13 @@ const daAna: Atividade = {
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
   gravar("atividades", [daAna]);
   gravar("historico", []);
 });
 
 function renderAtividades(quem: string, abaInicial = "minhas") {
   aba = abaInicial;
-  gravarSessao(quem);
+  entrarComo(quem);
   return render(
     <SistemaProvider>
       <Atividades />
