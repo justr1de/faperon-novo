@@ -69,6 +69,7 @@ def test_bases_dos_canais_sao_separadas() -> None:
         "/painel",
         "/central-de-inteligencia",
         "/central-de-inteligencia/observatorio",
+        "/credito-rural",
     } <= rotas_publico
     assert not any((r or "").startswith("/sistema") for r in rotas_publico)
     assert {
