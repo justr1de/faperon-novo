@@ -315,3 +315,29 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Causa:** o `.env` fica fora do git (o compose exige o arquivo), e um worktree novo não o tem.
 - **Solução ou contorno:** `cp .env.example .env` no worktree. É suficiente para os testes, que criam o próprio banco `test_*`.
 - **Status:** contornado.
+
+### O compose de um worktree usa o banco da pasta principal
+- **Sintoma:** risco de `migrate`, `seed` ou uma carga rodados num worktree gravarem no Postgres que atende o site em 3000/8000.
+- **Causa:** o `docker-compose.yml` fixa `name: faperon`; de qualquer pasta, o `docker compose run api-dev` sobe no mesmo projeto e usa o `faperon-db-1`.
+- **Solução ou contorno:** no worktree, sempre `docker compose -p <outro-nome> run ...` (ex.: `-p faperon-credito`), que cria banco e volume próprios.
+- **Status:** contornado.
+
+## Crédito rural, SICOR do Banco Central (18/10/2026, ADR 0036)
+
+### O OData do SICOR não aceita `$skip`
+- **Sintoma:** `$top=2&$skip=10` (com ou sem `$orderby`) responde `500 {"codigo": 500, "mensagem": "Erro desconhecido"}`.
+- **Causa:** limitação do serviço Olinda do BCB.
+- **Solução ou contorno:** paginação por período em `credito/sicor.py`: o ano inteiro com `$top` de 20.000 e, se a resposta enche, mês a mês; um mês que ainda enche é erro (não soma pela metade).
+- **Status:** contornado.
+
+### Espaço como `+` no `$filter` dá 400
+- **Sintoma:** a primeira carga real falhou em todos os anos com `HTTP 400: The types 'Edm.Boolean' and 'Edm.String' are not compatible.`; com `curl` e `%20` a mesma consulta funcionava.
+- **Causa:** o `requests` codifica o espaço dos `params` como `+`, e o Olinda não o lê como espaço.
+- **Solução ou contorno:** a URL é montada com `urlencode(..., quote_via=quote)`; há um teste que exige `%20` e nenhum `+`.
+- **Status:** resolvido.
+
+### Chamadas simultâneas ao SICOR recebem 500
+- **Sintoma:** seis consultas em paralelo: três voltaram 500; repetidas uma a uma, todas deram 200.
+- **Causa:** o serviço não aguenta concorrência (cada chamada já leva de 5 a 20 s).
+- **Solução ou contorno:** o cliente faz uma chamada por vez, com 4 tentativas e espera crescente.
+- **Status:** contornado.
