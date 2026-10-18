@@ -1,0 +1,109 @@
+# Servidor de teste da DATA-RO (ADR 0033). Este arquivo vive SÓ no branch `servidor` do nosso fork
+# (branch padrão de lá), em .github/workflows/servidor-teste.yml; aqui no main fica a cópia versionada.
+# Assim ele nunca vai para o repositório do Vinicius, e o main dos dois continua idêntico.
+#
+# A cada 10 min:
+# 1. sincronizar: traz o main do Vinicius para o main do fork (sem conflito; se houver, avisa e segue);
+# 2. imagens: se o commit do main do fork ainda não tem imagem no ECR, gera as imagens ARM (o servidor
+#    é t4g.small) e publica no ECR de São Paulo. O servidor confere o ECR a cada 2 min e reinicia.
+name: Servidor de teste
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: servidor-teste
+  cancel-in-progress: false
+
+env:
+  UPSTREAM: https://github.com/ViniciusP0/faperon-novo.git
+  AWS_REGION: sa-east-1
+
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.merge.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - id: merge
+        run: |
+          git config user.name "servidor-teste[bot]"
+          git config user.email "servidor-teste@users.noreply.github.com"
+          git fetch "$UPSTREAM" main
+          antes=$(git rev-parse HEAD)
+          if git merge --no-edit FETCH_HEAD; then
+            if [ "$(git rev-parse HEAD)" != "$antes" ]; then
+              # mudanças em .github/workflows do Vinicius exigem um token com escopo workflow: aí o push falha
+              git push origin HEAD:main || { echo "::warning::Não deu para sincronizar o main (veja o log)."; git reset -q --hard "$antes"; }
+            fi
+          else
+            git merge --abort || true
+            echo "::warning::O main do Vinicius conflita com o do fork; sincronize à mão."
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  imagens:
+    needs: [sincronizar]
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_SERVIDOR_TESTE }}
+          aws-region: ${{ env.AWS_REGION }}
+      - id: falta
+        env:
+          SHA: ${{ needs.sincronizar.outputs.sha }}
+        run: |
+          if aws ecr describe-images --repository-name faperon-teste/web --image-ids imageTag="$SHA" > /dev/null 2>&1 \
+            && aws ecr describe-images --repository-name faperon-teste/api --image-ids imageTag="$SHA" > /dev/null 2>&1; then
+            echo "construir=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "construir=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.falta.outputs.construir == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.sincronizar.outputs.sha }}
+      - if: steps.falta.outputs.construir == 'true'
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - if: steps.falta.outputs.construir == 'true'
+        uses: docker/setup-buildx-action@v3
+      - if: steps.falta.outputs.construir == 'true'
+        name: API
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          target: prod
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/faperon-teste/api:main
+            ${{ steps.ecr.outputs.registry }}/faperon-teste/api:${{ needs.sincronizar.outputs.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - if: steps.falta.outputs.construir == 'true'
+        name: Web
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/web
+          platforms: linux/arm64
+          push: true
+          build-args: |
+            SITE_URL=${{ vars.SITE_URL_SERVIDOR_TESTE }}
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/faperon-teste/web:main
+            ${{ steps.ecr.outputs.registry }}/faperon-teste/web:${{ needs.sincronizar.outputs.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
