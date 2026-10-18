@@ -71,7 +71,8 @@ export function optionAnualCredito(anual: AnoCredito[], escuro = false): ECharts
   return {
     color: [t.paleta[0]!, t.paleta[2]!], textStyle: t.texto_, tooltip, legend: { top: 0, ...t.legenda },
     grid: { left: 8, right: 16, top: 56, bottom: 8, containLabel: true },
-    xAxis: { type: "category", data: anual.map(rotuloAno), ...t.eixoX },
+    // Todos os anos no eixo; o incompleto quebra a linha ("2026" e "(até set)") para caber no celular.
+    xAxis: { type: "category", data: anual.map(rotuloAno), ...t.eixoX, axisLabel: { ...t.eixoX.axisLabel, interval: 0, hideOverlap: false, formatter: (v: string) => v.replace(" (", "\n("), fontSize: 11 } },
     yAxis,
     series: [
       { type: "bar", name: "Pronaf", stack: "total", data: anual.map((a) => a.valor_pronaf / 1000), barMaxWidth: 40 },

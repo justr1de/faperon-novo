@@ -113,11 +113,11 @@ function Evolucao({ d }: { d: CreditoSerie }) {
   const optAnual = useCallback((e: boolean) => optionAnualCredito(anual, e), [anual]);
   return (
     <div className="grid gap-10 xl:grid-cols-2">
-      <section aria-labelledby="evolucao-mensal-titulo">
+      <section aria-labelledby="evolucao-mensal-titulo" className="min-w-0">
         <h3 id="evolucao-mensal-titulo" className="text-sm font-semibold">Mês a mês em {ano}, com o mesmo mês de {ano - 1}</h3>
         <GraficoObservatorio option={optMensal} descricao={`Crédito rural contratado mês a mês em ${ano} (barras) e em ${ano - 1} (linha tracejada)`} altura={340} />
       </section>
-      <section aria-labelledby="evolucao-anual-titulo">
+      <section aria-labelledby="evolucao-anual-titulo" className="min-w-0">
         <h3 id="evolucao-anual-titulo" className="text-sm font-semibold">Ano a ano: Pronaf e demais programas</h3>
         <GraficoObservatorio option={optAnual} descricao="Crédito rural contratado por ano, com o Pronaf e os demais programas empilhados" altura={340} />
       </section>
@@ -162,11 +162,11 @@ function Municipios({ d, municipio }: { d: CreditoRanking; municipio: string | n
           {escolhido.nome} está em {escolhido.posicao}º lugar entre os 52 municípios, com {reaisPorExtenso(escolhido.valor)} ({pct(escolhido.participacao_pct)} do estado).
         </p>
       )}
-      <div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <MapaMunicipios municipios={municipiosNoMapa(itens)} unidade={UNIDADE} categorias={[]} descricao="Mapa dos municípios de Rondônia pelo crédito rural contratado" />
-        <section aria-labelledby="ranking-credito-titulo">
+        <section aria-labelledby="ranking-credito-titulo" className="min-w-0">
           <h3 id="ranking-credito-titulo" className="text-sm font-semibold">Os {BARRAS_RANKING} municípios que mais contrataram</h3>
-          <GraficoObservatorio option={opt} descricao={`Os ${BARRAS_RANKING} municípios com mais crédito rural contratado`} altura={520} />
+          <GraficoObservatorio option={opt} descricao={`Os ${BARRAS_RANKING} municípios com mais crédito rural contratado`} altura={520} alturaMovel={560} />
         </section>
       </div>
     </div>
@@ -191,7 +191,7 @@ function Produtos({ d }: { d: CreditoProdutos }) {
   const formato = useMemo(() => formatoPorUnidade(UNIDADE, Math.max(0, ...produtos.map((p) => p.valor / 1000))), [produtos]);
   const detalhes = useMemo(() => Object.fromEntries(produtos.map((p) => [p.nome, `${pct(p.participacao_pct)} do valor${p.atividade ? ` · ${ATIVIDADES[p.atividade] ?? p.atividade}` : ""}`])), [produtos]);
   const opt = useCallback((e: boolean) => optionBarrasHorizontais(produtos.map((p) => ({ nome: p.nome, valor: p.valor / 1000 })), UNIDADE, e, formato, detalhes), [produtos, formato, detalhes]);
-  return <GraficoObservatorio option={opt} descricao="Principais produtos e itens financiados por valor contratado" altura={Math.max(320, produtos.length * 36)} />;
+  return <GraficoObservatorio option={opt} descricao="Principais produtos e itens financiados por valor contratado" altura={Math.max(320, produtos.length * 52)} alturaMovel={Math.max(320, produtos.length * 56)} />;
 }
 
 function TabelaProdutos({ d, resumo }: { d: CreditoProdutos; resumo: CreditoResumo | undefined }) {
