@@ -5,6 +5,7 @@ Cuidados verificados na fonte (ADR 0036):
 - O serviço não aceita `$skip` (responde 500 "Erro desconhecido"). A paginação é por período: se o ano
   enche o `$top`, a carga pede mês a mês; se um mês ainda enche, é erro (nunca soma pela metade).
 - Cada chamada leva de 5 a 20 s e chamadas simultâneas costumam receber 500: o cliente pede uma por vez.
+- Espaços do $filter vão como %20 (com '+' o serviço responde 400).
 - Erro vem como texto `/*{"codigo": 500, "mensagem": "..."}*/`, não JSON.
 """
 
@@ -15,6 +16,7 @@ import time
 from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
+from urllib.parse import quote, urlencode
 
 import requests
 
@@ -115,7 +117,9 @@ class SicorCliente:
         ultimo_erro: Exception | None = None
         for tentativa in range(1, self.tentativas + 1):
             try:
-                resposta = self.sessao.get(url, params=params, timeout=self.timeout)
+                # Espaço como %20: o Olinda não entende o '+' que o requests usaria e responde 400.
+                consulta = urlencode(params, quote_via=quote, safe="$',")
+                resposta = self.sessao.get(f"{url}?{consulta}", timeout=self.timeout)
                 if resposta.status_code == 429 or resposta.status_code >= 500:
                     raise ErroSicor(f"HTTP {resposta.status_code}: {_mensagem(resposta)}")
                 if resposta.status_code >= 400:

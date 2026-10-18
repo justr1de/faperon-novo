@@ -36,6 +36,9 @@ def test_filtra_sempre_por_ro_e_pelo_ano_e_pede_so_os_campos_usados() -> None:
     assert "codMunicIbge" in consulta["$select"][0]
     assert consulta["$format"] == ["json"]
     assert consulta["$top"] == ["20000"]
+    # o Olinda não aceita '+' no lugar do espaço (responde 400 "Edm.Boolean and Edm.String")
+    url = responses.calls[0].request.url
+    assert "+" not in url and "cdEstado%20eq%20'22'" in url
 
 
 @responses.activate
