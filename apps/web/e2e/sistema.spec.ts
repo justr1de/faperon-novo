@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { emailDe, entrar } from "./entrar";
 import { semAreaDoZetele } from "./sem-zetele";
 
 test.beforeEach(({ page }) => semAreaDoZetele(page));
@@ -10,20 +11,16 @@ async function semViolacoesSerias(page: Page) {
   expect(serias, JSON.stringify(serias.map((v) => ({ id: v.id, nos: v.nodes.map((n) => n.target) })), null, 2)).toEqual([]);
 }
 
-async function login(page: Page) {
-  await page.goto("/login");
-  if (await page.getByLabel("E-mail").isVisible().catch(() => false)) {
-    await page.getByLabel("E-mail").fill("user@faperon.br");
-    await page.getByLabel("Senha", { exact: true }).fill("Senha@123");
-    await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  }
+/** Entra com o usuário de demonstração (ADR 0035): e-mail e senha conferidos pela API. */
+async function entrarComo(page: Page, nome: string) {
+  await entrar(page, emailDe(nome));
+  await expect(page.getByRole("heading", { name: `Olá, ${nome.split(" ")[0]}` })).toBeVisible();
 }
 
-async function entrarComo(page: Page, nome: string) {
-  await login(page);
-  await page.getByRole("button", { name: `Entrar como ${nome}` }).click();
-  await expect(page).toHaveURL(/\/sistema$/);
-  await expect(page.getByRole("heading", { name: `Olá, ${nome.split(" ")[0]}` })).toBeVisible();
+/** "Sair" da barra do sistema (o cabeçalho tem outro). */
+async function sair(page: Page) {
+  await page.getByRole("button", { name: "Sair", exact: true }).last().click();
+  await expect(page).toHaveURL(/\/login$/);
 }
 
 test("protótipo do sistema: agenda individual, reserva de veículo, frota e espaços", async ({ page }) => {
@@ -31,8 +28,8 @@ test("protótipo do sistema: agenda individual, reserva de veículo, frota e esp
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: "Acessar o sistema" })).toBeVisible();
   await semViolacoesSerias(page);
-  await page.getByLabel("E-mail").fill("user@faperon.br");
-  await page.getByLabel("Senha", { exact: true }).fill("errada");
+  await page.getByLabel("E-mail").fill("carla@exemplo.faperon.br");
+  await page.getByLabel("Senha", { exact: true }).fill("errada-errada");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "E-mail ou senha incorretos." })).toBeVisible();
 
@@ -58,7 +55,8 @@ test("protótipo do sistema: agenda individual, reserva de veículo, frota e esp
   await expect(page.getByRole("link", { name: /Viagem a Pimenta Bueno/ })).toBeVisible();
 
   // Marcos (gestor) vê outra agenda, registra manutenção e vê os custos
-  await page.getByRole("button", { name: "Trocar de funcionário" }).click();
+  // cada pessoa tem a própria conta: sai e entra o Marcos
+  await sair(page);
   await entrarComo(page, "Marcos Oliveira");
   await page.goto("/sistema/agenda");
   await expect(page.getByText("Gravação com a TV")).toHaveCount(0);
@@ -147,4 +145,27 @@ test("tour guiado percorre todas as áreas com o elemento de cada passo destacad
   }
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByText("Primeira vez por aqui?")).toHaveCount(0);
+});
+
+test("tela Usuários: só o administrador vê o acesso; gera senha temporária mostrada uma vez", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await entrarComo(page, "Ana Ribeiro");
+  await expect(page.getByRole("link", { name: "Usuários" })).toHaveCount(0);
+  await sair(page);
+
+  await entrarComo(page, "Marcos Oliveira");
+  await page.getByRole("link", { name: "Usuários" }).click();
+  await expect(page).toHaveURL(/\/sistema\/usuarios$/);
+  const tabela = page.getByRole("table", { name: "Usuários do sistema" });
+  await expect(tabela.getByRole("row", { name: /Carla Mendes/ })).toContainText("carla@exemplo.faperon.br");
+  await semViolacoesSerias(page);
+
+  // o João não é usado nos outros testes: a senha dele pode mudar sem atrapalhar ninguém
+  await page.getByRole("button", { name: "Gerar senha temporária para João Pereira" }).click();
+  await page.getByRole("dialog", { name: "Gerar senha temporária para João Pereira?" }).getByRole("button", { name: "Gerar senha" }).click();
+  const senha = page.getByRole("dialog", { name: "Senha temporária de João Pereira" });
+  await expect(senha).toContainText("aparece só agora");
+  await semViolacoesSerias(page);
+  await senha.getByRole("button", { name: "Pronto" }).click();
+  await expect(tabela.getByRole("row", { name: /João Pereira/ })).toContainText("Senha temporária");
 });

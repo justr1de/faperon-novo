@@ -1,6 +1,7 @@
 // Servidor mock da API FAPERON (docs/api-contract.md). Dados FICTÍCIOS, formato exato do contrato.
 // Uso: npm run mock  (porta 8000, ou MOCK_PORT)
 import { createServer } from "node:http";
+import { criarEstado, rotaDeContas } from "./mock-contas.mjs";
 
 const PORT = Number(process.env.MOCK_PORT ?? 8000);
 
@@ -576,8 +577,30 @@ function rota(url) {
   }
 }
 
-const server = createServer((req, res) => {
+const CONTAS = criarEstado();
+
+async function lerJson(req) {
+  if (req.method === "GET" || req.method === "HEAD") return null;
+  let texto = "";
+  for await (const pedaco of req) texto += pedaco;
+  try {
+    return texto ? JSON.parse(texto) : null;
+  } catch {
+    return null;
+  }
+}
+
+const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+  // login e contas (ADR 0035): sessão em memória, só para o e2e
+  const conta = rotaDeContas(CONTAS, req, url, await lerJson(req));
+  if (conta) {
+    const cabecalhos = { "Content-Type": "application/json; charset=utf-8" };
+    if (conta.cookies) cabecalhos["Set-Cookie"] = conta.cookies;
+    res.writeHead(conta.status, cabecalhos);
+    res.end(conta.json === undefined ? undefined : JSON.stringify(conta.json));
+    return;
+  }
   try {
     const r = rota(url);
     if (r.pdf) {

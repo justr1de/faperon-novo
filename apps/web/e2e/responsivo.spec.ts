@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { entrar } from "./entrar";
 
 test("celular: menu abre, sem rolagem horizontal, painel usável", async ({ page }) => {
   await page.goto("/");
@@ -38,11 +39,7 @@ test("no celular, o balão do Zétele mostra o campo e o botão de fechar", asyn
 });
 
 test("celular: o protótipo do sistema não tem rolagem horizontal", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByLabel("E-mail").fill("user@faperon.br");
-  await page.getByLabel("Senha", { exact: true }).fill("Senha@123");
-  await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await page.getByRole("button", { name: "Entrar como Ana Ribeiro" }).click();
+  await entrar(page, "ana@exemplo.faperon.br");
   for (const rota of ["/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"]) {
     await page.goto(rota);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
