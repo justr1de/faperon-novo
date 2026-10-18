@@ -13,6 +13,10 @@ from zetele.models import Pergunta
 
 ROTA = "/api/v1/sistema/interpretar"
 pytestmark = pytest.mark.django_db
+
+@pytest.fixture(autouse=True)
+def logado(api_logado: APIClient) -> None:
+    """Todas as rotas daqui são da área do sistema, que exige login (ADR 0035)."""
 VEICULOS = [
     {"id": "v-hilux", "descricao": "Toyota Hilux (QRT4E21)"},
     {"id": "v-gol", "descricao": "VW Gol (NEB-1234)"},

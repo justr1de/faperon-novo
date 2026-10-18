@@ -22,6 +22,10 @@ from zetele.cliente import PedidoRecusado, ProvedorIndisponivel
 
 pytestmark = pytest.mark.django_db
 
+@pytest.fixture(autouse=True)
+def logado(api_logado: APIClient) -> None:
+    """Todas as rotas daqui são da área do sistema, que exige login (ADR 0035)."""
+
 ROTA_OUVIR = "/api/v1/sistema/zetele/ouvir"
 ROTA_FALAR = "/api/v1/sistema/zetele/falar"
 ROTA_ESTADO = "/api/v1/sistema/zetele/estado"

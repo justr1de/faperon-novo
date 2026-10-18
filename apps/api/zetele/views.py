@@ -12,9 +12,11 @@ from rest_framework import serializers
 from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from usuarios.autenticacao import SessaoAutenticacao
+from usuarios.permissoes import EstaLogado
+from usuarios.throttles import ScopedPorIPThrottle
 from zetele import agente, audio, disponibilidade, registro, voz
 from zetele.audio.sintese import texto_para_fala
 from zetele.canais import PUBLICO, SISTEMA, Canal
@@ -131,7 +133,15 @@ class EstadoSistemaZeteleSerializer(EstadoSerializer):
     voz = EstadoVozZeteleSerializer()
 
 
-class EstadoSistemaView(EstadoView):
+class SoComLogin(APIView):
+    """Área do sistema: só a equipe logada (ADR 0035). Antes era aberta, porque o login só existia no
+    navegador (ADR 0032); as perguntas continuam anônimas, sem ligação com a conta."""
+
+    authentication_classes = [SessaoAutenticacao]
+    permission_classes = [EstaLogado]
+
+
+class EstadoSistemaView(SoComLogin, EstadoView):
     canal = SISTEMA
 
     @extend_schema(responses={200: EstadoSistemaZeteleSerializer})
@@ -142,7 +152,7 @@ class EstadoSistemaView(EstadoView):
 class LimitesDoZetele(APIView):
     """Limite por IP e teto global de quem gasta a cota da Anthropic; cada canal tem os seus."""
 
-    throttle_classes = [ScopedRateThrottle, ZeteleGlobalThrottle]
+    throttle_classes = [ScopedPorIPThrottle, ZeteleGlobalThrottle]
     throttle_scope = "zetele"
     # só JSON: formulário simples de outro site não chega aqui sem preflight de CORS
     parser_classes = [JSONParser]
@@ -154,8 +164,8 @@ class LimitesDoZetele(APIView):
                 self.throttled(request, cast(float, throttle.wait()))
 
 
-class LimitesDoZeteleSistema(LimitesDoZetele):
-    throttle_classes = [ScopedRateThrottle, ZeteleSistemaGlobalThrottle]
+class LimitesDoZeteleSistema(SoComLogin, LimitesDoZetele):
+    throttle_classes = [ScopedPorIPThrottle, ZeteleSistemaGlobalThrottle]
     throttle_scope = "zetele_sistema"
 
 
@@ -362,10 +372,10 @@ class FalarZeteleSerializer(serializers.Serializer):
     texto = serializers.CharField(max_length=4000)
 
 
-class LimitesDaVoz(LimitesDoZetele):
+class LimitesDaVoz(SoComLogin, LimitesDoZetele):
     """Ouvir e falar dividem um limite por IP e um teto por minuto próprios."""
 
-    throttle_classes = [ScopedRateThrottle, ZeteleVozGlobalThrottle]
+    throttle_classes = [ScopedPorIPThrottle, ZeteleVozGlobalThrottle]
     throttle_scope = "zetele_voz"
 
 

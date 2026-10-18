@@ -188,6 +188,8 @@ def pedir_sistema(api: APIClient, **corpo: Any) -> Any:
     return api.post(ROTA_SISTEMA, dados, format="json", HTTP_X_FORWARDED_FOR="198.51.100.7")
 
 
+# a área do sistema exige login (ADR 0035)
+@pytest.mark.usefixtures("api_logado")
 def test_cada_canal_aceita_so_as_proprias_paginas(
     api: APIClient, com_chave: None, cliente_ok: ClienteLLMFalso, dados_soja: Produto
 ) -> None:
@@ -196,6 +198,8 @@ def test_cada_canal_aceita_so_as_proprias_paginas(
     assert pedir_sistema(api).status_code == 200
 
 
+# a área do sistema exige login (ADR 0035)
+@pytest.mark.usefixtures("api_logado")
 def test_perguntas_do_sistema_vao_para_tabela_propria(
     api: APIClient, com_chave: None, cliente_ok: ClienteLLMFalso, dados_soja: Produto
 ) -> None:
@@ -205,6 +209,8 @@ def test_perguntas_do_sistema_vao_para_tabela_propria(
     assert PerguntaSistema.objects.get().pagina == "/sistema/espacos"
 
 
+# a área do sistema exige login (ADR 0035)
+@pytest.mark.usefixtures("api_logado")
 def test_limite_diario_de_cada_canal_e_independente(
     api: APIClient, com_chave: None, cliente_ok: ClienteLLMFalso, dados_soja: Produto, settings: Any
 ) -> None:
