@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ipDoCliente, proxyParaApi } from "./proxy";
+import { cookiesDaApi, ipDoCliente, proxyParaApi } from "./proxy";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -226,6 +226,78 @@ describe("proxyParaApi", () => {
       expect(res.headers.get("content-type")).toBe("audio/wav");
       expect(res.headers.get("cache-control")).toBe("no-store");
       expect(new Uint8Array(await res.arrayBuffer())).toEqual(wav);
+    });
+  });
+
+  describe("sessão do sistema (ADR 0035)", () => {
+    it("repassa o Cookie e o X-CSRFToken da pessoa à API", async () => {
+      const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+      vi.stubGlobal("fetch", fetchFalso);
+      await proxyParaApi(
+        new Request("http://site.test/api/v1/auth/sair", {
+          method: "POST",
+          headers: { cookie: "sessionid=abc; csrftoken=xyz", "x-csrftoken": "xyz" },
+        }),
+      );
+      const enviados = fetchFalso.mock.calls[0]![1].headers as Headers;
+      expect(enviados.get("cookie")).toBe("sessionid=abc; csrftoken=xyz");
+      expect(enviados.get("x-csrftoken")).toBe("xyz");
+    });
+
+    it("só os cookies do Django vão para a API", () => {
+      expect(cookiesDaApi("tema=escuro; sessionid=abc; _ga=1; csrftoken=xyz")).toBe("sessionid=abc; csrftoken=xyz");
+      expect(cookiesDaApi("tema=escuro")).toBeNull();
+      expect(cookiesDaApi(null)).toBeNull();
+    });
+
+    it("não repassa Origin nem Authorization (a API não precisa e o CSRF fica no token)", async () => {
+      const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+      vi.stubGlobal("fetch", fetchFalso);
+      await proxyParaApi(
+        new Request("http://site.test/api/v1/auth/eu", { headers: { origin: "http://outro.test", authorization: "Basic x" } }),
+      );
+      const enviados = fetchFalso.mock.calls[0]![1].headers as Headers;
+      expect(enviados.has("origin")).toBe(false);
+      expect(enviados.has("authorization")).toBe(false);
+    });
+
+    it("devolve cada Set-Cookie da API com HttpOnly, SameSite e Secure intactos", async () => {
+      const sessao = "sessionid=abc; expires=Sun, 19 Oct 2026 05:00:00 GMT; HttpOnly; Max-Age=43200; Path=/; SameSite=Lax; Secure";
+      const csrf = "csrftoken=xyz; expires=Sun, 17 Oct 2027 17:00:00 GMT; Max-Age=31449600; Path=/; SameSite=Lax; Secure";
+      const resposta = new Response("{}", {
+        status: 200,
+        headers: [
+          ["content-type", "application/json"],
+          ["set-cookie", sessao],
+          ["set-cookie", csrf],
+        ],
+      });
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(resposta));
+      const res = await proxyParaApi(new Request("http://site.test/api/v1/auth/entrar", { method: "POST", body: "{}" }));
+      expect(res.headers.getSetCookie()).toEqual([sessao, csrf]);
+    });
+
+    it("sem Set-Cookie na resposta, não inventa nenhum", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 200 })));
+      const res = await proxyParaApi(new Request("http://site.test/api/v1/ranking"));
+      expect(res.headers.getSetCookie()).toEqual([]);
+    });
+
+    it("PATCH (editar usuário) repassa o corpo com o limite de texto", async () => {
+      const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+      vi.stubGlobal("fetch", fetchFalso);
+      const corpo = JSON.stringify({ nome: "Carla" });
+      await proxyParaApi(
+        new Request("http://site.test/api/v1/usuarios/carla", { method: "PATCH", headers: { "content-type": "application/json" }, body: corpo }),
+      );
+      const [, init] = fetchFalso.mock.calls[0]!;
+      expect(init.method).toBe("PATCH");
+      expect(init.body).toBe(corpo);
+    });
+
+    it("a rota do Next exporta PATCH para a edição de usuários", async () => {
+      const rota = await import("@/app/api/[...caminho]/route");
+      expect(rota.PATCH).toBe(proxyParaApi);
     });
   });
 });
