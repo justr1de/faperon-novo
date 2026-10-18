@@ -7,5 +7,6 @@ urlpatterns = [
     path("api/v1/", include("indicadores.api.urls")),
     path("api/v1/", include("analise.urls")),
     path("api/v1/", include("observatorio.urls")),
+    path("api/v1/", include("credito.urls")),
     path("api/v1/", include("zetele.urls")),
 ]

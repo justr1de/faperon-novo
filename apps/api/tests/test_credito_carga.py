@@ -183,3 +183,21 @@ def test_comando_carregar_sicor(
     cliente.chamadas.clear()
     call_command("carregar_sicor", "--desde", "2025", "--ate", "2026")
     assert sorted({a for _, a in cliente.chamadas}) == [2025, 2026]
+
+
+@pytest.mark.django_db
+def test_scheduler_nao_cai_se_o_credito_quebrar(monkeypatch: pytest.MonkeyPatch) -> None:
+    from ingestao.management.commands import run_scheduler
+
+    def explode(*_: Any) -> int:
+        raise RuntimeError("banco fora")
+
+    monkeypatch.setattr(run_scheduler, "atualizar_credito", explode)
+    assert run_scheduler.rodar_ciclo_credito(SicorFalso()) == 0  # type: ignore[arg-type]
+
+
+def test_rotas_do_credito_no_zetele_publico() -> None:
+    from zetele.canais import PUBLICO
+    from zetele.verificacao import ROTAS_PERMITIDAS
+
+    assert "/credito-rural" in PUBLICO.paginas and "/credito-rural" in ROTAS_PERMITIDAS
