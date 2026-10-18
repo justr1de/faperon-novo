@@ -541,6 +541,155 @@ function observatorio(bloco, sp) {
   };
 }
 
+// ---- Crédito rural (/api/v1/credito/*): formato exato do contrato (apps/api/credito/consultas.py), dados fictícios ----
+const CREDITO_ANOS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
+const CREDITO_MESES_ULTIMO = 9; // o ano corrente vai até setembro
+const MESES_NOME = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+const PROGRAMAS = [{ slug: "pronaf", nome: "Pronaf" }, { slug: "pronamp", nome: "Pronamp" }, { slug: "demais", nome: "Demais programas e sem programa" }];
+const FINALIDADES = [{ slug: "custeio", nome: "Custeio" }, { slug: "investimento", nome: "Investimento" }, { slug: "comercializacao", nome: "Comercialização" }, { slug: "industrializacao", nome: "Industrialização" }];
+const PESO_PROGRAMA = { pronaf: 0.35, pronamp: 0.2, demais: 0.45 };
+const PESO_FINALIDADE = { custeio: 0.58, investimento: 0.38, comercializacao: 0.02, industrializacao: 0.02 };
+const META_CREDITO = {
+  fontes: [{ fonte: "Banco Central do Brasil, Matriz de Dados do Crédito Rural (SICOR)", url_fonte: "https://www.bcb.gov.br/estabilidadefinanceira/micrrural", licenca: "ODbL" }],
+  atualizado_em: "2026-10-18T12:00:00Z",
+};
+const slugMun = (nome) => semAcento(nome).replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const MUN_CREDITO = MUNICIPIOS.map((m) => ({ ...m, slug: slugMun(m.nome) }));
+
+function mesesDoAno(ano) {
+  return ano === CREDITO_ANOS.at(-1) ? CREDITO_MESES_ULTIMO : 12;
+}
+
+/** Valor (R$) de um município num mês, para um programa e uma finalidade. Determinístico. */
+function valorCredito(mi, ano, mes, programa, finalidade) {
+  const base = 400_000 + (hash(`c${mi}`) % 9_000_000);
+  const crescimento = 1 + (ano - 2018) * 0.07;
+  const sazonal = 0.7 + ((mes * 7) % 12) / 20;
+  return Math.round(base * crescimento * sazonal * PESO_PROGRAMA[programa] * PESO_FINALIDADE[finalidade] * 100) / 100;
+}
+
+function somaCredito({ ano, ateMes, mi, programa, finalidade, mes }) {
+  let valor = 0;
+  const municipios = mi === null ? MUN_CREDITO.map((_, i) => i) : [mi];
+  const programas = programa ? [programa] : Object.keys(PESO_PROGRAMA);
+  const finalidades = finalidade ? [finalidade] : Object.keys(PESO_FINALIDADE);
+  const meses = mes ? [mes] : Array.from({ length: ateMes }, (_, i) => i + 1);
+  for (const i of municipios) for (const p of programas) for (const f of finalidades) for (const m of meses) valor += valorCredito(i, ano, m, p, f);
+  return { valor: Math.round(valor * 100) / 100, contratos: Math.round(valor / 85_000) };
+}
+
+function filtrosCredito(sp) {
+  const ano = sp.get("ano") ? Number(sp.get("ano")) : CREDITO_ANOS.at(-1);
+  if (!Number.isInteger(ano)) throw new HttpError(400, "Parâmetros inválidos", { ano: "Um número inteiro válido é necessário." });
+  if (!CREDITO_ANOS.includes(ano)) throw new HttpError(400, "Parâmetros inválidos", { ano: `use um ano entre ${CREDITO_ANOS[0]} e ${CREDITO_ANOS.at(-1)}` });
+  const programa = sp.get("programa") || null;
+  if (programa && !PROGRAMAS.some((p) => p.slug === programa)) throw new HttpError(400, "Parâmetros inválidos", { programa: `"${programa}" não é um escolha válido.` });
+  const finalidade = sp.get("finalidade") || null;
+  if (finalidade && !FINALIDADES.some((f) => f.slug === finalidade)) throw new HttpError(400, "Parâmetros inválidos", { finalidade: `"${finalidade}" não é um escolha válido.` });
+  const chave = sp.get("municipio");
+  let mi = null;
+  if (chave) {
+    mi = MUN_CREDITO.findIndex((m) => m.codigo_ibge === chave || m.slug === chave);
+    if (mi < 0) throw new HttpError(404, `Município '${chave}' não existe`, {});
+  }
+  const municipio = mi === null ? null : { codigo_ibge: MUN_CREDITO[mi].codigo_ibge, nome: MUN_CREDITO[mi].nome, slug: MUN_CREDITO[mi].slug };
+  return { ano, programa, finalidade, mi, municipio };
+}
+
+function respostaCredito(f, metricas, series, extra = {}) {
+  const meses = mesesDoAno(f.ano);
+  const avisos = meses < 12 ? [`${f.ano} tem dados de janeiro a ${MESES_NOME[meses - 1]}: o Banco Central publica a matriz com cerca de um mês de defasagem. A variação compara com o mesmo período de ${f.ano - 1}.`] : [];
+  return {
+    filtros: {
+      valores: { ano: f.ano, municipio: f.municipio, programa: f.programa, finalidade: f.finalidade },
+      opcoes: { anos: CREDITO_ANOS, municipios: [...MUN_CREDITO].map(({ codigo_ibge, nome, slug }) => ({ codigo_ibge, nome, slug })).sort((a, b) => a.slug.localeCompare(b.slug)), programas: PROGRAMAS, finalidades: FINALIDADES },
+    },
+    metricas,
+    series,
+    qualidade: { ano_completo: meses === 12, meses_com_dado: meses, mes_mais_recente: `${CREDITO_ANOS.at(-1)}-0${CREDITO_MESES_ULTIMO}`, avisos },
+    meta: META_CREDITO,
+    ...extra,
+  };
+}
+
+function divisaoCredito(itens, chave, f, ateMes) {
+  const linhas = itens.map((i) => ({ ...i, ...somaCredito({ ano: f.ano, ateMes, mi: f.mi, programa: chave === "programa" ? i.slug : f.programa, finalidade: chave === "finalidade" ? i.slug : f.finalidade }) }));
+  // Como na API, a divisão por finalidade respeita o filtro de finalidade: as outras ficam com zero.
+  const ajustadas = linhas.map((l) => (chave === "finalidade" && f.finalidade && l.slug !== f.finalidade ? { ...l, valor: 0, contratos: 0 } : l));
+  const total = ajustadas.reduce((a, b) => a + b.valor, 0);
+  return ajustadas.map((l) => ({ slug: l.slug, nome: l.nome, valor: l.valor, contratos: l.contratos, participacao: total ? (l.valor / total) * 100 : null }));
+}
+
+function credito(rotaCredito, sp) {
+  const f = filtrosCredito(sp);
+  const ate = mesesDoAno(f.ano);
+  if (rotaCredito === "resumo") {
+    const atual = somaCredito({ ano: f.ano, ateMes: ate, mi: f.mi, programa: f.programa, finalidade: f.finalidade });
+    const semPrograma = somaCredito({ ano: f.ano, ateMes: ate, mi: f.mi, programa: null, finalidade: f.finalidade });
+    const pronaf = somaCredito({ ano: f.ano, ateMes: ate, mi: f.mi, programa: "pronaf", finalidade: f.finalidade });
+    const anterior = f.ano > CREDITO_ANOS[0] ? somaCredito({ ano: f.ano - 1, ateMes: ate, mi: f.mi, programa: f.programa, finalidade: f.finalidade }).valor : null;
+    const variacao = anterior ? (atual.valor / anterior - 1) * 100 : null;
+    const onde = f.municipio ? f.municipio.nome : "Rondônia";
+    const periodo = ate === 12 ? `em ${f.ano}` : `de janeiro a ${MESES_NOME[ate - 1]} de ${f.ano}`;
+    const participacao = semPrograma.valor ? (pronaf.valor / semPrograma.valor) * 100 : null;
+    const atividades = [{ slug: "agricola", nome: "Agrícola", fator: 0.32 }, { slug: "pecuaria", nome: "Pecuária", fator: 0.68 }]
+      .map((a) => ({ slug: a.slug, nome: a.nome, valor: Math.round(atual.valor * a.fator * 100) / 100, contratos: Math.round(atual.contratos * a.fator), participacao: a.fator * 100 }));
+    return respostaCredito(f, {
+      valor_total: atual.valor, contratos: atual.contratos, valor_medio: atual.contratos ? atual.valor / atual.contratos : null,
+      valor_pronaf: pronaf.valor, participacao_pronaf_pct: participacao, valor_ano_anterior: anterior, variacao_pct: variacao, area_custeio_ha: 125000,
+    }, {
+      programas: divisaoCredito(PROGRAMAS, "programa", { ...f, programa: null }, ate),
+      finalidades: divisaoCredito(FINALIDADES, "finalidade", f, ate),
+      atividades,
+    }, {
+      texto: {
+        manchete: `${onde} contratou R$ ${(atual.valor / 1e9 >= 1 ? (atual.valor / 1e9).toFixed(1) + " bilhões" : (atual.valor / 1e6).toFixed(1) + " milhões").replace(".", ",")} em crédito rural ${periodo} (dados fictícios do mock).`,
+        como_ler: participacao === null ? [] : [`O Pronaf, crédito da agricultura familiar, responde por ${participacao.toFixed(1).replace(".", ",")}% do valor contratado.`],
+      },
+    });
+  }
+  if (rotaCredito === "serie") {
+    const mensal = Array.from({ length: 12 }, (_, i) => {
+      const mes = i + 1;
+      const publicado = mes <= ate;
+      const atual = somaCredito({ ano: f.ano, mes, mi: f.mi, programa: f.programa, finalidade: f.finalidade });
+      const pronaf = somaCredito({ ano: f.ano, mes, mi: f.mi, programa: "pronaf", finalidade: f.finalidade });
+      const anterior = f.ano > CREDITO_ANOS[0] ? somaCredito({ ano: f.ano - 1, mes, mi: f.mi, programa: f.programa, finalidade: f.finalidade }).valor : null;
+      return { mes, valor: publicado ? atual.valor : null, contratos: publicado ? atual.contratos : null, valor_pronaf: publicado ? (f.programa && f.programa !== "pronaf" ? 0 : pronaf.valor) : null, valor_ano_anterior: anterior };
+    });
+    const anual = CREDITO_ANOS.map((a) => {
+      const meses = mesesDoAno(a);
+      const t = somaCredito({ ano: a, ateMes: meses, mi: f.mi, programa: f.programa, finalidade: f.finalidade });
+      const p = somaCredito({ ano: a, ateMes: meses, mi: f.mi, programa: "pronaf", finalidade: f.finalidade });
+      return { ano: a, valor: t.valor, contratos: t.contratos, valor_pronaf: f.programa && f.programa !== "pronaf" ? 0 : p.valor, meses, completo: meses === 12 };
+    });
+    return respostaCredito(f, {}, { mensal, anual });
+  }
+  if (rotaCredito === "ranking") {
+    const g = { ...f, mi: null };
+    const itens = MUN_CREDITO.map((m, i) => {
+      // Dois municípios sem contrato no período: zero de verdade, nunca "sem dado".
+      const s = i % 26 === 25 ? { valor: 0, contratos: 0 } : somaCredito({ ano: f.ano, ateMes: ate, mi: i, programa: f.programa, finalidade: f.finalidade });
+      return { codigo_ibge: m.codigo_ibge, nome: m.nome, slug: m.slug, microrregiao: m.nome, valor: s.valor, contratos: s.contratos, valor_por_contrato: s.contratos ? s.valor / s.contratos : null };
+    }).sort((a, b) => b.valor - a.valor || a.slug.localeCompare(b.slug));
+    const total = itens.reduce((a, b) => a + b.valor, 0);
+    const linhas = itens.map((x, i) => ({ posicao: i + 1, ...x, participacao_pct: total ? (x.valor / total) * 100 : null }));
+    return respostaCredito(g, { valor_total: total, top5_pct: total ? (linhas.slice(0, 5).reduce((a, b) => a + b.valor, 0) / total) * 100 : null }, { municipios: linhas });
+  }
+  // por-produto
+  if (f.finalidade === "comercializacao" || f.finalidade === "industrializacao") {
+    const r = respostaCredito(f, {}, {});
+    r.qualidade.avisos.push("O Banco Central não detalha por produto o crédito de comercialização e industrialização; o detalhe por produto existe só para custeio e investimento.");
+    return r;
+  }
+  const total = somaCredito({ ano: f.ano, ateMes: ate, mi: f.mi, programa: f.programa, finalidade: f.finalidade }).valor * 0.96;
+  const PRODUTOS_CREDITO = [["bovinos", "Bovinos", "pecuaria", 0.52], ["soja", "Soja", "agricola", 0.11], ["tercos-porteiras-mata-burros-currais-cochos-cercas", "Terraços, porteiras, mata-burros, currais, cochos, cercas", "pecuaria", 0.07], ["cafe", "Café", "agricola", 0.05], ["pastagem", "Pastagem", "agricola", 0.04], ["milho", "Milho", "agricola", 0.03], ["maquinas-e-implementos", "Máquinas e implementos", "agricola", 0.03], ["trator", "Trator", "agricola", 0.02], ["peixe", "Peixe", "pecuaria", 0.02]];
+  const resto = 1 - PRODUTOS_CREDITO.reduce((a, p) => a + p[3], 0);
+  const produtos = [...PRODUTOS_CREDITO.map(([slug, nome, atividade, fator]) => ({ slug, nome, atividade, valor: Math.round(total * fator * 100) / 100, participacao_pct: fator * 100, area_ha: atividade === "agricola" ? 1000 : null })),
+    { slug: "demais", nome: "Demais produtos (40)", atividade: null, valor: Math.round(total * resto * 100) / 100, participacao_pct: resto * 100, area_ha: null }];
+  return respostaCredito(f, { valor_total: total, produtos: 49 }, { produtos });
+}
+
 function rota(url) {
   const sp = url.searchParams;
   switch (url.pathname.replace(/\/$/, "")) {
@@ -565,6 +714,10 @@ function rota(url) {
     case "/api/v1/observatorio/crescimento": return { json: observatorio("crescimento", sp) };
     case "/api/v1/observatorio/territorio": return { json: observatorio("territorio", sp) };
     case "/api/v1/observatorio/pecuaria": return { json: observatorio("pecuaria", sp) };
+    case "/api/v1/credito/resumo": return { json: credito("resumo", sp) };
+    case "/api/v1/credito/serie": return { json: credito("serie", sp) };
+    case "/api/v1/credito/ranking": return { json: credito("ranking", sp) };
+    case "/api/v1/credito/por-produto": return { json: credito("por-produto", sp) };
     case "/api/v1/relatorio.pdf": {
       const a = analise(sp);
       const { inicio, fim } = periodo(sp);
