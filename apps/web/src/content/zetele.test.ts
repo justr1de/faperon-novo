@@ -23,7 +23,7 @@ describe("Zétele: conteúdo", () => {
   it("aparece no Início, na Central, no Observatório, no Painel e na área logada", () => {
     expect([...PAGINAS_COM_ZETELE].sort()).toEqual([
       "/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel",
-      "/sistema", "/sistema/agenda", "/sistema/atividades", "/sistema/contas", "/sistema/espacos", "/sistema/frotas", "/sistema/relatorios",
+      "/sistema", "/sistema/agenda", "/sistema/atividades", "/sistema/contas", "/sistema/espacos", "/sistema/frotas", "/sistema/relatorios", "/sistema/usuarios",
     ]);
     expect(ehPaginaComZetele("/sistema/frotas")).toBe(true);
     expect(ehPaginaComZetele("/painel")).toBe(true);
@@ -41,7 +41,7 @@ describe("Zétele: conteúdo", () => {
   });
 
   it("tem as perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
-    expect(PERGUNTAS).toHaveLength(24);
+    expect(PERGUNTAS).toHaveLength(25);
     for (const p of PERGUNTAS.filter((q) => q.tipo === "estatica")) {
       expect(p.resposta, p.id).toBeTruthy();
       expect([...ROTAS, ...PAGINAS_COM_ZETELE], p.id).toContain(p.href!.split("?")[0]);

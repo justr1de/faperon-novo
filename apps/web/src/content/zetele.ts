@@ -14,6 +14,7 @@ export const PAGINAS_COM_ZETELE = [
   "/sistema/contas",
   "/sistema/relatorios",
   "/sistema/atividades",
+  "/sistema/usuarios",
 ] as const;
 export type PaginaComZetele = (typeof PAGINAS_COM_ZETELE)[number];
 
@@ -233,6 +234,15 @@ export const PERGUNTAS: PerguntaPronta[] = [
     href: "/sistema/atividades?aba=historico",
     rotuloLink: "Abrir o Histórico",
   },
+  {
+    id: "sis-usuarios",
+    area: "sistema",
+    texto: "Como cadastro uma pessoa da equipe?",
+    tipo: "estatica",
+    resposta: "Quem é administrador abre Usuários, na barra do sistema, e clica em Novo usuário. O sistema gera uma senha temporária, que aparece uma única vez; a pessoa troca a senha no primeiro acesso. Quem esqueceu a senha também recebe uma temporária do administrador.",
+    href: "/sistema/usuarios",
+    rotuloLink: "Abrir Usuários",
+  },
 ];
 
 /** No Início o Zétele só orienta (sem dados); perguntas de dados e preços ficam na Central. */
@@ -254,6 +264,7 @@ export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/sistema/contas": ["sis-despesa", "sis-aprovacao-contas", "sis-relatorio", "sis-evento"],
   "/sistema/relatorios": ["sis-relatorio", "sis-custos", "sis-despesa", "sis-voz"],
   "/sistema/atividades": ["sis-atividade", "sis-historico", "sis-voz", "sis-relatorio"],
+  "/sistema/usuarios": ["sis-usuarios", "sis-historico", "sis-evento", "sis-relatorio"],
 };
 
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {

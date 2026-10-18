@@ -38,6 +38,7 @@ PAGINAS_DO_SISTEMA = (
     "/sistema/contas",
     "/sistema/relatorios",
     "/sistema/atividades",
+    "/sistema/usuarios",
 )
 SISTEMA = Canal(
     nome="sistema",

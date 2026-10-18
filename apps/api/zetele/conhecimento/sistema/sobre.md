@@ -6,5 +6,5 @@ Na área logada, o Zétele é o assistente do sistema interno da FAPERON (protó
 ## [-] Contas, perfis e permissões
 Cada pessoa entra com a própria conta (e-mail e senha, ou "Entrar com Google" quando ligado). Por enquanto só há usuários de demonstração, com nomes inventados. Marcos Oliveira (Administrativo) é o administrador, o gestor da frota, dos espaços e das contas, e o coordenador que vê as atividades e o histórico da equipe. Os demais (Carla, Ana, João e Luíza) usam os módulos para si. Na barra do sistema há "Restaurar dados de exemplo", "Tour guiado" e "Sair"; quem gere vê também "Gerenciar tags", e o administrador vê "Usuários".
 
-## [-] Usuários, senha esquecida e primeiro acesso
+## [/sistema/usuarios] Usuários, senha esquecida e primeiro acesso
 Na tela Usuários, o administrador cadastra, edita, desativa e reativa contas e gera uma senha temporária, que aparece uma única vez. Quem esqueceu a senha pede ao administrador uma senha temporária: ainda não há envio de e-mail. No primeiro acesso com a senha temporária, o sistema pede uma senha nova, com pelo menos 10 caracteres, antes de abrir o resto. Depois de 5 tentativas erradas, o login fica bloqueado por 15 minutos.
