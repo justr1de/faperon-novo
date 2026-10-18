@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TOUR } from "@/content/sistema/tour";
-import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import { InicioSistema } from "../inicio-sistema";
 import { TourProvider, tourJaVisto } from "./tour";
@@ -20,8 +20,7 @@ beforeEach(() => {
   window.history.pushState({}, "", "/sistema");
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
   push.mockClear();
-  gravarAcesso(true);
-  gravarSessao("carla");
+  entrarComo("carla");
 });
 
 function renderInicio() {
@@ -78,8 +77,7 @@ describe("tour guiado", () => {
     unmount();
 
     window.localStorage.clear();
-    gravarAcesso(true);
-    gravarSessao("carla");
+    entrarComo("carla");
     renderInicio();
     await user.click(screen.getByRole("button", { name: "Agora não" }));
     expect(screen.queryByText("Primeira vez por aqui?")).toBeNull();

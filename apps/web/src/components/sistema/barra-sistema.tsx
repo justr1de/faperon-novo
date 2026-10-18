@@ -1,6 +1,7 @@
 "use client";
 
-import { Compass, LogOut, RotateCcw, Tags, UserRoundCog } from "lucide-react";
+import { Compass, LogOut, RotateCcw, Tags, UsersRound } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
@@ -15,7 +16,7 @@ const acao =
 
 /** Barra do sistema em vidro, fixa sob o cabeçalho: quem está logado e as ações. As seções ficam no cabeçalho. */
 export function BarraSistema() {
-  const { funcionario, sair, encerrar, restaurar } = useSistema();
+  const { funcionario, precisaTrocarSenha, sair, restaurar } = useSistema();
   const { iniciar } = useTour();
   const [semEspaco, setSemEspaco] = useState(false);
   const [gerindoTags, setGerindoTags] = useState(false);
@@ -26,15 +27,13 @@ export function BarraSistema() {
   }, []);
   const router = useRouter();
 
-  function trocar() {
-    sair();
+  // cada pessoa tem a própria conta (ADR 0035): "Trocar de funcionário" virou "Sair"
+  async function sairDoSistema() {
+    await sair();
     router.push("/login");
   }
-
-  function sairDoSistema() {
-    encerrar();
-    router.push("/login");
-  }
+  // com senha temporária, só Sair: o resto espera a troca
+  const liberado = funcionario && !precisaTrocarSenha;
 
   return (
     <div className="vidro-barra z-30 md:sticky md:top-[72px] print:hidden">
@@ -50,26 +49,26 @@ export function BarraSistema() {
             <RotateCcw aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
             <span className="sr-only sm:not-sr-only">{PROTOTIPO.restaurar}</span>
           </button>
-          {funcionario && (
+          {liberado && (
             <button type="button" onClick={iniciar} className={acao}>
               <Compass aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
               <span className="sr-only sm:not-sr-only">Tour guiado</span>
             </button>
           )}
-          {podeGerirTags(funcionario) && (
+          {liberado && podeGerirTags(funcionario) && (
             <button type="button" onClick={() => setGerindoTags(true)} className={acao}>
               <Tags aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
               <span className="sr-only sm:not-sr-only">Gerenciar tags</span>
             </button>
           )}
-          {funcionario && (
-            <button type="button" onClick={trocar} className={acao}>
-              <UserRoundCog aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-              <span className="sr-only sm:not-sr-only">Trocar de funcionário</span>
-            </button>
+          {liberado && funcionario.administrador && (
+            <Link href="/sistema/usuarios" className={acao}>
+              <UsersRound aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">Usuários</span>
+            </Link>
           )}
           {funcionario && (
-            <button type="button" onClick={sairDoSistema} className={acao}>
+            <button type="button" onClick={() => void sairDoSistema()} className={acao}>
               <LogOut aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
               <span className="sr-only sm:not-sr-only">Sair</span>
             </button>

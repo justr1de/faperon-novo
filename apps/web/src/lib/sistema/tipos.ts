@@ -10,6 +10,8 @@ export interface Funcionario {
   gestorContas: boolean;
   /** Coordena a equipe: vê as atividades e o histórico de todos. */
   coordenador: boolean;
+  /** Gere as contas da equipe (tela Usuários, ADR 0035). */
+  administrador?: boolean;
 }
 
 export type TipoEvento = "reuniao" | "viagem" | "compromisso";

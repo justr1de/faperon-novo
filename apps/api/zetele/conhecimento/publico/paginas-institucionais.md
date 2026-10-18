@@ -28,7 +28,7 @@ Comissão Estadual das Mulheres da FAPERON: desenvolvimento e capacitação das 
 Explica quais dados o site trata, inclusive as perguntas feitas ao Zétele (guardadas por 90 dias, sem IP), e como exercer os direitos da LGPD.
 
 ## [/login] Acessar o sistema
-O botão "Acessar o sistema", no alto do site, leva à entrada da área logada. Hoje ela é um protótipo para a FAPERON avaliar: depois do login de demonstração, a pessoa escolhe um perfil de funcionário de exemplo. Os dados são fictícios e ficam salvos só no navegador de quem usa; nada é enviado ao servidor.
+O botão "Acessar o sistema", no alto do site, leva à entrada da área logada. Hoje ela é um protótipo para a FAPERON avaliar, restrito à equipe: cada pessoa entra com o próprio e-mail e senha, conferidos no servidor, e por enquanto só há usuários de demonstração. Quem esqueceu a senha pede ao administrador uma senha temporária. A agenda, a frota e os demais dados de exemplo ficam salvos só no navegador de quem usa.
 
 ## [/galeria] Galeria
 Fotos dos eventos da FAPERON e do Sistema FAPERON/SENAR (dias de campo, formaturas, missões, congressos e capacitações em Rondônia), organizadas em álbuns por evento. O filtro mostra todos os álbuns, só os da FAPERON ou só os do SENAR; clicar numa foto amplia e permite passar as outras pelo teclado. Cada álbum leva à matéria completa no site de origem.

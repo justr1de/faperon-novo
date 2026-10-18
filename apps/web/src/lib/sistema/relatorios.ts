@@ -1,5 +1,4 @@
 import { ESPACOS } from "@/content/sistema/exemplo";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { ROTULO_ORIGEM } from "./agenda";
 import { atividadesVisiveis, horasDaAtividade, ROTULO_TIPO_ATIVIDADE } from "./atividades";
 import { ROTULO_CATEGORIA, ROTULO_STATUS_DESPESA } from "./contas";
@@ -44,7 +43,8 @@ export const ROTULO_RELATORIO: Record<TipoRelatorio, string> = {
 const arredondar = (v: number, casas = 2) => Math.round(v * 10 ** casas) / 10 ** casas;
 const noPeriodo = (data: string, de: string, ate: string) => data.slice(0, 10) >= de && data.slice(0, 10) <= ate;
 const minutos = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
-const nomeDe = (id: string) => FUNCIONARIOS.find((f) => f.id === id)?.nome ?? id;
+/** Nome na equipe vinda da API (ADR 0035); quem não está mais nela aparece pelo código. */
+const nomeNaEquipe = (equipe: Funcionario[], id: string) => equipe.find((f) => f.id === id)?.nome ?? id;
 
 /** Com tag, contam só as viagens com ela. Abastecimento e manutenção não têm tag: as colunas de custo ficam
  *  vazias, para não atribuir à tag gastos que não são dela (nem dividir o custo do período pelos km da tag). */
@@ -163,7 +163,7 @@ export function relatorioAgenda(itens: Evento[], de: string, ate: string, tags: 
 }
 
 /** O gestor das contas vê as despesas de todos; os demais, só as próprias. */
-export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, de: string, ate: string, tags: Tag[] = []): Relatorio {
+export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, de: string, ate: string, tags: Tag[] = [], equipe: Funcionario[] = []): Relatorio {
   const visiveis = despesas
     .filter((d) => (funcionario.gestorContas || d.funcionarioId === funcionario.id) && noPeriodo(d.data, de, ate))
     .sort((a, b) => a.data.localeCompare(b.data) || a.descricao.localeCompare(b.descricao));
@@ -189,7 +189,7 @@ export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, d
     ],
     linhas: visiveis.map((d) => [
       formatarDataBR(d.data),
-      ...(comQuem ? [nomeDe(d.funcionarioId)] : []),
+      ...(comQuem ? [nomeNaEquipe(equipe, d.funcionarioId)] : []),
       d.centro,
       ROTULO_CATEGORIA[d.categoria],
       d.descricao,
@@ -202,7 +202,7 @@ export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, d
 }
 
 /** O coordenador vê as atividades de todos; os demais, só as próprias. */
-export function relatorioAtividades(atividades: Atividade[], funcionario: Funcionario, de: string, ate: string, tags: Tag[] = []): Relatorio {
+export function relatorioAtividades(atividades: Atividade[], funcionario: Funcionario, de: string, ate: string, tags: Tag[] = [], equipe: Funcionario[] = []): Relatorio {
   const lista = atividadesVisiveis(atividades, funcionario)
     .filter((a) => noPeriodo(a.data, de, ate))
     .sort((a, b) => a.data.localeCompare(b.data) || a.inicio.localeCompare(b.inicio));
@@ -234,7 +234,7 @@ export function relatorioAtividades(atividades: Atividade[], funcionario: Funcio
     linhas: lista.map((a) => [
       formatarDataBR(a.data),
       `${a.inicio}–${a.fim}`,
-      ...(comQuem ? [nomeDe(a.funcionarioId)] : []),
+      ...(comQuem ? [nomeNaEquipe(equipe, a.funcionarioId)] : []),
       ROTULO_TIPO_ATIVIDADE[a.tipo],
       a.titulo,
       a.municipio,

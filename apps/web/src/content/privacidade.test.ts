@@ -7,19 +7,19 @@ const texto = [
 ].join("\n");
 
 describe("Política de Privacidade descreve só o que o sistema faz hoje", () => {
-  it("não fala de sessão, autenticação nem credenciais (o login é uma tela sem envio)", () => {
-    expect(texto).not.toMatch(/sess[ãa]o|autentic|credenciais|áreas restritas|identificação de usuário/i);
-  });
-
-  it("explica que o login não coleta nem guarda nada", () => {
-    expect(texto).toMatch(/login[^.]*não envia nem guarda/i);
-    expect(texto).toMatch(/protótipo[^.]*fica salvo só no seu navegador/);
+  it("explica o login de verdade da área do sistema (ADR 0035): conta, cookie de sessão e registro de acessos", () => {
+    expect(texto).toMatch(/login é conferido no servidor/);
+    expect(texto).toMatch(/cookie de sessão, necessário/);
+    expect(texto).toMatch(/usuários de demonstração/);
+    expect(texto).toMatch(/Google só confirma o seu e-mail/);
+    expect(texto).toMatch(/tentativa sem sucesso[^.]*endereço IP/);
+    expect(texto).toMatch(/continua salvo só no seu navegador/);
   });
 
   it("informa o tratamento técnico do IP para limitar abusos, sem gravar em banco", () => {
     expect(texto).toMatch(/endereço IP/);
     expect(texto).toMatch(/limitar abusos/);
-    expect(texto).toMatch(/não é gravado em banco de dados/);
+    expect(texto).toMatch(/No painel e no Zétele[^.]*não é gravado em banco de dados/);
   });
 
   it("mantém o formulário via WhatsApp, a preferência de tema e os canais de contato", () => {
@@ -30,7 +30,7 @@ describe("Política de Privacidade descreve só o que o sistema faz hoje", () =>
   });
 
   it("tem a data da revisão atual", () => {
-    expect(PRIVACIDADE.atualizadoEm).toBe("2026-10-17");
+    expect(PRIVACIDADE.atualizadoEm).toBe("2026-10-18");
   });
 
   it("descreve o Zétele: o que guarda, por quanto tempo, sem IP, e o envio à Anthropic", () => {

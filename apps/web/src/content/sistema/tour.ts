@@ -19,7 +19,7 @@ export const TOUR: PassoDoTour[] = [
     rota: "/sistema",
     alvo: "barra",
     titulo: "O menu do sistema",
-    texto: "Daqui você chega a todas as áreas. O nome e a área de quem está usando aparecem logo abaixo, com a opção de trocar de funcionário ou sair.",
+    texto: "Daqui você chega a todas as áreas. O nome e a área de quem está usando aparecem logo abaixo, com a opção de sair. Cada pessoa entra com a própria conta.",
   },
   {
     id: "inicio",

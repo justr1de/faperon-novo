@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
@@ -119,7 +118,7 @@ function PedidoDeKm({ titulo, rotulo, minimo, aoConfirmar, aoCancelar }: { titul
 }
 
 export function Reservas() {
-  const { funcionario, hoje, frota, atualizarFrota } = useSistema();
+  const { funcionario, hoje, frota, atualizarFrota, nomeDe } = useSistema();
   const [nova, setNova] = useState<Reserva | null>(null);
   const [faltandoVoz, setFaltandoVoz] = useState<string[] | null>(null);
   const [km_, setKm] = useState<{ reserva: Reserva; etapa: "saida" | "retorno" } | null>(null);
@@ -210,7 +209,7 @@ export function Reservas() {
                 </p>
                 <p className="text-ink-muted">
                   {quando(r)} · {v ? `${v.modelo} (${formatarPlaca(v.placa)})` : "veículo removido"}
-                  {filtro === "todas" && ` · ${FUNCIONARIOS.find((f) => f.id === r.funcionarioId)?.nome ?? ""}`}
+                  {filtro === "todas" && ` · ${nomeDe(r.funcionarioId)}`}
                   {r.kmInicial != null && r.kmFinal != null && ` · ${km(r.kmFinal - r.kmInicial)} rodados`}
                 </p>
                 <ChipsDeTags ids={r.tags} className="mt-1.5" />

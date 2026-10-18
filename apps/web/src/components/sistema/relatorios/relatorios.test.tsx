@@ -1,12 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import { Relatorios } from "./relatorios";
 
 function renderRelatorios(quem: string) {
-  gravarSessao(quem);
+  entrarComo(quem);
   return render(
     <SistemaProvider>
       <Relatorios />
@@ -17,7 +17,6 @@ function renderRelatorios(quem: string) {
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
 });
 afterEach(() => vi.restoreAllMocks());
 

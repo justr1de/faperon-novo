@@ -4,7 +4,6 @@ import { MapPin, Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { historicoVisivel, horasDaAtividade, LIMITE_HISTORICO, resumoPorFuncionario, ROTULO_MODULO, ROTULO_TIPO_ATIVIDADE } from "@/lib/sistema/atividades";
 import { agoraISO, formatarDataBR, formatarHora, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
@@ -19,10 +18,10 @@ import { ChipsDeTags, FiltroDeTag, useFiltroDeTag } from "../tags";
 import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 import { FormularioAtividade } from "./formulario-atividade";
 
-const nomeDe = (id: string) => FUNCIONARIOS.find((f) => f.id === id)?.nome ?? id;
 const horas = (h: number) => `${h.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} h`;
 
 function LinhaAtividade({ a, mostrarQuem, acoes }: { a: Atividade; mostrarQuem: boolean; acoes?: React.ReactNode }) {
+  const { nomeDe } = useSistema();
   return (
     <li className="rounded-xl border border-line bg-card p-3 text-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -135,7 +134,7 @@ function MinhasAtividades({ aoEditar, tag, aoMudarTag }: { aoEditar: (a: Ativida
 }
 
 function Equipe({ tag, aoMudarTag }: FiltroTag) {
-  const { hoje, atividades: todas } = useSistema();
+  const { hoje, atividades: todas, equipe } = useSistema();
   const atividades = comTag(todas, tag);
   const [de, setDe] = useState(`${hoje.slice(0, 7)}-01`);
   const [ate, setAte] = useState(hoje);
@@ -168,7 +167,7 @@ function Equipe({ tag, aoMudarTag }: FiltroTag) {
             </tr>
           </thead>
           <tbody>
-            {FUNCIONARIOS.map((f) => {
+            {equipe.map((f) => {
               const r = resumo.find((x) => x.funcionarioId === f.id);
               return (
                 <tr key={f.id} className="border-b border-line">
@@ -186,7 +185,7 @@ function Equipe({ tag, aoMudarTag }: FiltroTag) {
         <Label htmlFor="atividades-quem">Mostrar atividades de</Label>
         <Select id="atividades-quem" value={quem} onChange={(e) => setQuem(e.target.value)}>
           <option value="">Toda a equipe</option>
-          {FUNCIONARIOS.map((f) => (
+          {equipe.map((f) => (
             <option key={f.id} value={f.id}>
               {f.nome}
             </option>
@@ -204,7 +203,7 @@ function Equipe({ tag, aoMudarTag }: FiltroTag) {
 }
 
 function Historico() {
-  const { funcionario, historico } = useSistema();
+  const { funcionario, historico, nomeDe } = useSistema();
   const [modulo, setModulo] = useState<ModuloHistorico | "">("");
   if (!funcionario) return null;
   const lista = historicoVisivel(historico, funcionario).filter((r) => !modulo || r.modulo === modulo);

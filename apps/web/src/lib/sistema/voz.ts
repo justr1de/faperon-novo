@@ -1,4 +1,5 @@
 import { API_BASE } from "../api";
+import { cabecalhoCsrf } from "./conta";
 import { horarioDoPeriodo } from "./espacos";
 import type { Atividade, Evento, IdEspaco, PedidoEspaco, PeriodoEspaco, Reserva, TipoAtividade, TipoEvento, TipoEventoEspaco } from "./tipos";
 
@@ -80,7 +81,8 @@ export async function interpretar<T extends TipoVoz>(
   try {
     const r = await fetch(`${API_BASE}/sistema/interpretar`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      // a rota exige a sessão do sistema (ADR 0035)
+      headers: { "content-type": "application/json", ...cabecalhoCsrf() },
       body: JSON.stringify({ tipo, texto, hoje, ...opcoes }),
     });
     if (r.ok) {

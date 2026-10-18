@@ -3,7 +3,6 @@
 import { ChevronLeft, ChevronRight, Coffee } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { ESPACOS } from "@/content/sistema/exemplo";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
@@ -32,7 +31,6 @@ const corStatus: Record<StatusPedido, string> = {
 };
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const nomeFuncionario = (id: string) => FUNCIONARIOS.find((f) => f.id === id)?.nome ?? id;
 
 function StatusPedidoSelo({ status }: { status: StatusPedido }) {
   return <Badge className={cn("px-2 py-0", corStatus[status])}>{ROTULO_STATUS[status]}</Badge>;
@@ -119,7 +117,7 @@ function PainelSemana({ tag }: { tag: string }) {
 }
 
 function DetalhesPedido({ p, mostrarQuem }: { p: PedidoEspaco; mostrarQuem: boolean }) {
-  const { pedidos } = useSistema();
+  const { pedidos, nomeDe: nomeFuncionario } = useSistema();
   const espaco = ESPACOS.find((e) => e.id === p.espacoId)!;
   const conflitos = p.status === "pendente" || p.status === "aprovado" ? conflitosDoPedido(p, pedidos) : [];
   const lotado = excedeCapacidade(p, espaco);
@@ -158,7 +156,7 @@ function DetalhesPedido({ p, mostrarQuem }: { p: PedidoEspaco; mostrarQuem: bool
 }
 
 function Fila({ tag }: { tag: string }) {
-  const { funcionario, pedidos, atualizarPedidos } = useSistema();
+  const { funcionario, pedidos, atualizarPedidos, nomeDe: nomeFuncionario } = useSistema();
   const [aviso, setAviso] = useState<string | null>(null);
   const [recusando, setRecusando] = useState<PedidoEspaco | null>(null);
   const [motivo, setMotivo] = useState("");

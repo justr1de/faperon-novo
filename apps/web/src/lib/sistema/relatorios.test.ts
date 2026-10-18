@@ -115,7 +115,7 @@ describe("relatórios", () => {
     const daCarla = relatorioContas(lista, carla, "2026-10-01", "2026-10-31");
     expect(daCarla.linhas).toHaveLength(3);
     expect(daCarla.total!.at(-1)).toBe(150);
-    const doGestor = relatorioContas(lista, marcos, "2026-10-01", "2026-10-31");
+    const doGestor = relatorioContas(lista, marcos, "2026-10-01", "2026-10-31", [], FUNCIONARIOS);
     expect(doGestor.linhas).toHaveLength(4);
     expect(doGestor.colunas[1]!.rotulo).toBe("Funcionário");
     expect(doGestor.linhas.some((l) => l[1] === "João Pereira")).toBe(true);
@@ -147,7 +147,7 @@ describe("relatórios", () => {
     expect(daCarla.linhas).toEqual([["05/10/2026", "08:00–10:30", "Visita técnica", "Visita", "Cacoal", "Encaminhou 3", "", 9, 2.5]]);
     expect(daCarla.total).toEqual(["Total", "", "", "", "", "", "", 9, 2.5]);
     expect(daCarla.tipos).toEqual(["visita_tecnica"]);
-    const daEquipe = relatorioAtividades(lista, marcos, "2026-10-01", "2026-10-31");
+    const daEquipe = relatorioAtividades(lista, marcos, "2026-10-01", "2026-10-31", [], FUNCIONARIOS);
     expect(daEquipe.titulo).toBe("Atividades da equipe");
     expect(daEquipe.linhas.map((l) => l[2])).toEqual(["Carla Mendes", "Ana Ribeiro"]);
     expect(daEquipe.total!.at(-1)).toBe(3.5);

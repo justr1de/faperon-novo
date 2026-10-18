@@ -90,7 +90,7 @@ function Tabela({ r }: { r: Relatorio }) {
 }
 
 export function Relatorios() {
-  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas, atividades, tags } = useSistema();
+  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas, atividades, tags, equipe } = useSistema();
   const inicioDoMes = `${hoje.slice(0, 7)}-01`;
   const fimDoMes = somarDias(somarMeses(inicioDoMes, 1), -1);
   const [tipo, setTipo] = useState<TipoRelatorio>("frota");
@@ -116,9 +116,9 @@ export function Relatorios() {
       case "agenda":
         return relatorioAgenda(comTag(itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos), tagId), de, ate, tags);
       case "contas":
-        return relatorioContas(comTag(despesas, tagId), funcionario, de, ate, tags);
+        return relatorioContas(comTag(despesas, tagId), funcionario, de, ate, tags, equipe);
       case "atividades":
-        return relatorioAtividades(comTag(atividades, tagId), funcionario, de, ate, tags);
+        return relatorioAtividades(comTag(atividades, tagId), funcionario, de, ate, tags, equipe);
     }
   };
   const relatorio = periodoValido ? comNotaDeTag(gerar(), tag, tipo) : null;

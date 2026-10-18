@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravarAcesso, gravarSessao, lerAcesso, lerSessao } from "@/lib/sistema/armazenamento";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { contaLembrada } from "@/lib/sistema/conta";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { SiteHeader } from "./header";
 
 let caminho = "/";
@@ -12,6 +13,7 @@ beforeEach(() => {
   caminho = "/";
   push.mockClear();
 });
+afterEach(() => vi.unstubAllGlobals());
 
 describe("SiteHeader", () => {
   it("mostra o botão 'Acessar o sistema' levando para /login", () => {
@@ -29,16 +31,18 @@ describe("SiteHeader", () => {
     for (const link of links) expect(link).toHaveAttribute("href", "/login");
   });
 
-  it("na área logada troca 'Acessar o sistema' por 'Sair', que encerra o acesso e volta ao login", async () => {
+  it("na área logada troca 'Acessar o sistema' por 'Sair', que encerra a sessão no servidor e volta ao login", async () => {
     caminho = "/sistema/agenda";
-    gravarAcesso(true);
-    gravarSessao("carla");
+    entrarComo("carla");
+    document.cookie = "csrftoken=t";
+    const buscar = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", buscar);
     const user = userEvent.setup();
     render(<SiteHeader />);
     expect(screen.queryByRole("link", { name: /Acessar o sistema/ })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Sair" }));
-    expect(lerAcesso()).toBe(false);
-    expect(lerSessao()).toBeNull();
+    expect(buscar).toHaveBeenCalledWith("/api/v1/auth/sair", expect.objectContaining({ method: "POST" }));
+    expect(contaLembrada()).toBeNull();
     expect(push).toHaveBeenCalledWith("/login");
   });
 

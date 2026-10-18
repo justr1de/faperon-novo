@@ -1,6 +1,6 @@
 export const PRIVACIDADE = {
   titulo: "Política de Privacidade",
-  atualizadoEm: "2026-10-17",
+  atualizadoEm: "2026-10-18",
   seo: {
     titulo: "Política de Privacidade",
     descricao: "Como a FAPERON trata os dados pessoais de quem visita o site, usa o formulário de contato ou o painel.",
@@ -20,10 +20,11 @@ export const PRIVACIDADE = {
       titulo: "Quais dados tratamos",
       itens: [
         "Dados do formulário de contato: nome, sobrenome, e-mail, telefone e a mensagem que você escreve. O formulário monta a mensagem e abre uma conversa no WhatsApp da FAPERON; o envio só acontece quando você o confirma no WhatsApp.",
-        "A área \"Acessar o sistema\" é, por enquanto, um protótipo com funcionários e dados fictícios: o login não envia nem guarda nada no servidor, e o que você cria na agenda, na frota, no agendamento de espaços, na prestação de contas (inclusive comprovantes anexados) e no registro de atividades, assim como o histórico automático das ações feitas no sistema, fica salvo só no seu navegador.",
+        "A área \"Acessar o sistema\" é restrita à equipe e, por enquanto, um protótipo com usuários de demonstração. O login é conferido no servidor da FAPERON: guardamos de cada conta o nome, o e-mail, a área, o telefone (opcional) e os papéis no sistema, e um cookie de sessão, necessário, mantém você logado por até 12 horas. Se você entrar com o Google, o Google só confirma o seu e-mail; não recebemos sua senha do Google. Cada entrada, saída, tentativa sem sucesso e mudança de conta fica registrada com data, hora, e-mail informado e endereço IP, para a segurança das contas.",
+        "O que você cria na agenda, na frota, no agendamento de espaços, na prestação de contas (inclusive comprovantes anexados) e no registro de atividades, assim como o histórico automático das ações feitas no sistema, continua salvo só no seu navegador.",
         "No protótipo, o \"Agendar por voz\" usa o reconhecimento de voz do próprio navegador (no Chrome e no Edge, o áudio é processado pelo serviço de voz do fornecedor do navegador). O texto transcrito, ou digitado, é enviado à Anthropic só para preencher os campos do formulário e não é gravado em nossos servidores.",
         "Preferência de tema (claro ou escuro), guardada apenas no seu navegador. Ela não é enviada à FAPERON.",
-        "O painel de inteligência usa dados públicos do IBGE e não pede nem guarda dados pessoais de quem o consulta. O endereço IP do visitante é tratado de forma técnica, por cerca de um minuto e em cache temporário, só para limitar abusos (limite de requisições por minuto no painel e no Zétele); ele não é gravado em banco de dados e não é usado para identificar ninguém.",
+        "O painel de inteligência usa dados públicos do IBGE e não pede nem guarda dados pessoais de quem o consulta. No painel e no Zétele, o endereço IP do visitante é tratado de forma técnica, por cerca de um minuto e em cache temporário, só para limitar abusos (limite de requisições por minuto); ele não é gravado em banco de dados e não é usado para identificar ninguém. A exceção é o login da área do sistema, descrito acima.",
         "Perguntas feitas ao Zétele, o assistente do site: guardamos o texto da pergunta, se ela foi respondida ou recusada, a página em que foi feita e a data e hora, por até 90 dias, para melhorar as respostas e montar uma lista de perguntas frequentes. Não guardamos seu endereço IP nem qualquer identificador junto da pergunta. Dados pessoais que apareçam no texto (como CPF, e-mail ou telefone) são mascarados antes de gravar; mesmo assim, evite digitá-los. As perguntas feitas ao Zétele dentro da área do sistema seguem as mesmas regras, mas ficam num registro separado das perguntas do site.",
       ],
     },
@@ -52,6 +53,7 @@ export const PRIVACIDADE = {
       paragrafos: [
         "Guardamos os dados pelo tempo necessário para cumprir a finalidade para a qual foram coletados e para atender a obrigações legais. Depois disso, eles são eliminados ou anonimizados.",
         "As perguntas feitas ao Zétele são apagadas automaticamente após 90 dias.",
+        "As contas da área do sistema e o registro de acessos ficam guardados enquanto a pessoa fizer parte da equipe. Quem sai tem a conta desativada, e não apagada, para manter a autoria do que foi feito.",
       ],
     },
     {
