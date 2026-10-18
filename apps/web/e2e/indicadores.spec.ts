@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { emailDe, entrar } from "./entrar";
 import { semAreaDoZetele } from "./sem-zetele";
 
 test.beforeEach(({ page }) => semAreaDoZetele(page));
@@ -12,15 +13,9 @@ async function semViolacoesSerias(page: Page) {
   expect(serias, JSON.stringify(serias.map((v) => ({ id: v.id, nos: v.nodes.map((n) => n.target) })), null, 2)).toEqual([]);
 }
 
+/** Entra com o usuário de demonstração do funcionário (login real, ADR 0035). */
 async function entrarComo(page: Page, nome: string) {
-  await page.goto("/login");
-  if (await page.getByLabel("E-mail").isVisible().catch(() => false)) {
-    await page.getByLabel("E-mail").fill("user@faperon.br");
-    await page.getByLabel("Senha", { exact: true }).fill("Senha@123");
-    await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  }
-  await page.getByRole("button", { name: `Entrar como ${nome}` }).click();
-  await expect(page).toHaveURL(/\/sistema$/);
+  await entrar(page, emailDe(nome));
 }
 
 async function abrirIndicadores(page: Page) {
