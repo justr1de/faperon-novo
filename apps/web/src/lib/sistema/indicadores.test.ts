@@ -320,7 +320,8 @@ describe("atividades", () => {
   ];
 
   it("horas por tipo, público por mês, municípios e horas por funcionário", () => {
-    const r = indicadoresAtividades(atividades, filtro());
+    // os nomes vêm da equipe da API; aqui, os funcionários de demonstração
+    const r = indicadoresAtividades(atividades, filtro(), new Map(FUNCIONARIOS.map((f) => [f.id, f.nome])));
     expect(r).toMatchObject({ atividades: 4, horas: 23.5, publico: 54 });
     expect(r.horasPorTipo).toEqual([
       { tipo: "visita_tecnica", legenda: "visita_tecnica", horas: 8.5 },

@@ -26,7 +26,7 @@ from rest_framework.views import APIView
 
 from usuarios import servicos
 from usuarios.autenticacao import SessaoAutenticacao
-from usuarios.models import PAPEIS, Perfil, RegistroDeConta
+from usuarios.models import PAPEIS, Perfil, RegistroDeConta, perfil_de
 from usuarios.permissoes import EhAdministrador, EstaLogado, TemPerfil
 from usuarios.serializers import (
     CsrfSerializer,
@@ -97,7 +97,7 @@ def _entrou(request: Request, usuario: User, detalhe: str = "") -> Response:
     servicos.registrar(
         RegistroDeConta.Acao.ENTROU, ator=usuario, alvo=usuario, ip=ip_de(request), detalhe=detalhe
     )
-    return Response(PerfilDaContaSerializer(usuario.perfil).data)
+    return Response(PerfilDaContaSerializer(perfil_de(usuario)).data)
 
 
 class CsrfView(APIView):
@@ -182,7 +182,7 @@ class EuView(ComSessao):
 
     @extend_schema(responses={200: PerfilDaContaSerializer})
     def get(self, request: Request) -> Response:
-        return Response(PerfilDaContaSerializer(usuario_de(request).perfil).data)
+        return Response(PerfilDaContaSerializer(perfil_de(usuario_de(request))).data)
 
 
 class TrocarSenhaView(ComSessao):
@@ -218,8 +218,8 @@ class TrocarSenhaView(ComSessao):
         servicos.registrar(
             RegistroDeConta.Acao.TROCOU_SENHA, ator=usuario, alvo=usuario, ip=ip_de(request)
         )
-        usuario.perfil.refresh_from_db()
-        return Response(PerfilDaContaSerializer(usuario.perfil).data)
+        perfil_de(usuario).refresh_from_db()
+        return Response(PerfilDaContaSerializer(perfil_de(usuario)).data)
 
 
 # ---------- equipe e administração ----------
@@ -258,7 +258,7 @@ class UsuariosView(ComSessao):
             ator=usuario_de(request),
         )
         corpo = {
-            "usuario": UsuarioDaAdministracaoSerializer(usuario.perfil).data,
+            "usuario": UsuarioDaAdministracaoSerializer(perfil_de(usuario)).data,
             "senha_temporaria": senha,
         }
         return Response(corpo, status=201)

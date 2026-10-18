@@ -1,5 +1,4 @@
 import { ESPACOS } from "@/content/sistema/exemplo";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { itensDaAgenda } from "./agenda";
 import { horasDaAtividade, resumoPorFuncionario, ROTULO_TIPO_ATIVIDADE } from "./atividades";
 import { ROTULO_CATEGORIA, totaisPorCentro, type TotalDoCentro } from "./contas";
@@ -93,7 +92,6 @@ const minutos = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.sl
 const daPessoa = <T extends { funcionarioId: string }>(itens: T[], pessoa: string | null) => (pessoa ? itens.filter((i) => i.funcionarioId === pessoa) : itens);
 /** O uso geral da frota e dos espaços é de todos; só quem vê a equipe recorta por pessoa. */
 const pessoaDoUsoGeral = (e: Escopo) => (e.equipe ? e.pessoa : null);
-const nomeDe = (id: string) => FUNCIONARIOS.find((f) => f.id === id)?.nome ?? id;
 
 // ---------- Agenda ----------
 
@@ -289,7 +287,8 @@ export interface IndicadoresAtividades {
   porFuncionario: { funcionarioId: string; nome: string; atividades: number; horas: number; publico: number }[] | null;
 }
 
-export function indicadoresAtividades(atividades: Atividade[], f: Filtro): IndicadoresAtividades {
+/** `nomes`: código do funcionário -> nome (a equipe vem da API desde a ADR 0035). */
+export function indicadoresAtividades(atividades: Atividade[], f: Filtro, nomes: ReadonlyMap<string, string> = new Map()): IndicadoresAtividades {
   const lista = daPessoa(comTag(atividades, f.tagId), f.escopo.pessoa).filter((a) => noIntervalo(a.data, f.intervalo));
   const horasPorTipo = (Object.keys(ROTULO_TIPO_ATIVIDADE) as TipoAtividade[])
     .map((tipo) => ({ tipo, legenda: TIPO_DA_ATIVIDADE[tipo], horas: arredondar(lista.filter((a) => a.tipo === tipo).reduce((s, a) => s + horasDaAtividade(a), 0)) }))
@@ -315,7 +314,7 @@ export function indicadoresAtividades(atividades: Atividade[], f: Filtro): Indic
     municipios,
     porFuncionario:
       f.escopo.equipe && !f.escopo.pessoa
-        ? resumoPorFuncionario(lista, f.intervalo.de, f.intervalo.ate).map((r) => ({ ...r, nome: nomeDe(r.funcionarioId) }))
+        ? resumoPorFuncionario(lista, f.intervalo.de, f.intervalo.ate).map((r) => ({ ...r, nome: nomes.get(r.funcionarioId) ?? r.funcionarioId }))
         : null,
   };
 }

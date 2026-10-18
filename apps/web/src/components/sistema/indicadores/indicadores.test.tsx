@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravar, gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
+import { gravar } from "@/lib/sistema/armazenamento";
+import { entrarComo } from "@/lib/sistema/conta-de-teste";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import { Indicadores } from "./indicadores";
 
@@ -14,7 +15,7 @@ vi.mock("next/dynamic", () => ({
 }));
 
 function renderIndicadores(quem: string) {
-  gravarSessao(quem);
+  entrarComo(quem);
   return render(
     <SistemaProvider>
       <Indicadores />
@@ -33,7 +34,6 @@ function valor(nomeDoBloco: string, rotulo: string): string {
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  gravarAcesso(true);
 });
 
 describe("Indicadores", () => {

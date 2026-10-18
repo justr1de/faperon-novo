@@ -102,3 +102,9 @@ class RegistroDeConta(models.Model):
 
     def __str__(self) -> str:
         return f"{self.quando:%Y-%m-%d %H:%M} {self.acao}"
+
+
+def perfil_de(usuario: object) -> Perfil:
+    """O perfil do usuário (lado reverso do OneToOne), com tipo para o mypy."""
+    perfil: Perfil = getattr(usuario, "perfil")  # noqa: B009
+    return perfil

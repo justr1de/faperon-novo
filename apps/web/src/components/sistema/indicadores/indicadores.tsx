@@ -7,7 +7,6 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useEscuro } from "@/components/observatorio/use-escuro";
 import { Label, Select } from "@/components/ui/field";
 import { agendaDeExemplo } from "@/content/sistema/exemplo";
-import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { ler } from "@/lib/sistema/armazenamento";
 import { ROTULO_TIPO_ATIVIDADE } from "@/lib/sistema/atividades";
 import { ROTULO_CATEGORIA } from "@/lib/sistema/contas";
@@ -213,7 +212,7 @@ function Lista({ titulo, itens }: { titulo: string; itens: { nome: string; valor
 }
 
 export function Indicadores() {
-  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas, atividades, tags } = useSistema();
+  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas, atividades, tags, equipe: colegas } = useSistema();
   const [periodo, setPeriodo] = useState<PeriodoIndicadores>("3m");
   const [tagId, setTagId] = useFiltroDeTag();
   const [escolhido, setEscolhido] = useState("");
@@ -227,22 +226,22 @@ export function Indicadores() {
 
   const itensDaAgenda = useMemo(() => {
     if (!funcionario || !filtro) return [];
-    const ids = filtro.escopo.pessoa ? [filtro.escopo.pessoa] : FUNCIONARIOS.map((f) => f.id);
+    const ids = filtro.escopo.pessoa ? [filtro.escopo.pessoa] : colegas.map((f) => f.id);
     // a agenda de cada colega fica guardada neste navegador (ou é a de exemplo, se nunca foi aberta)
     const pessoaisDe = (id: string): Evento[] => (id === funcionario.id ? eventos : limparTags(ler<Evento[]>(`agenda:${id}`, agendaDeExemplo(id, hoje)), tags));
     return agendaDaEquipe(ids, pessoaisDe, institucionais, frota.reservas, frota.veiculos, pedidos);
-  }, [funcionario, filtro, eventos, institucionais, frota, pedidos, tags, hoje]);
+  }, [funcionario, filtro, eventos, institucionais, frota, pedidos, tags, hoje, colegas]);
 
   if (!funcionario || !filtro) return null;
   const equipe = podeVerEquipe(funcionario);
-  const escolhidoNome = FUNCIONARIOS.find((f) => f.id === filtro.escopo.pessoa)?.nome;
+  const escolhidoNome = colegas.find((f) => f.id === filtro.escopo.pessoa)?.nome;
   const quem = !equipe ? "Seus números" : filtro.escopo.pessoa ? `Números de ${escolhidoNome}` : "Toda a equipe";
 
   const agenda = indicadoresAgenda(itensDaAgenda, filtro);
   const fr = indicadoresFrota(frota, filtro);
   const esp = indicadoresEspacos(pedidos, filtro);
   const contas = indicadoresContas(despesas, filtro);
-  const ativ = indicadoresAtividades(atividades, filtro);
+  const ativ = indicadoresAtividades(atividades, filtro, new Map(colegas.map((f) => [f.id, f.nome])));
   const meses = filtro.intervalo.meses.map(rotuloMesCurto);
   const custosSemFiltro = Boolean(filtro.tagId || (filtro.escopo.equipe && filtro.escopo.pessoa));
 
@@ -266,7 +265,7 @@ export function Indicadores() {
             <Label htmlFor="indicadores-funcionario">Funcionário</Label>
             <Select id="indicadores-funcionario" value={escolhido} onChange={(e) => setEscolhido(e.target.value)}>
               <option value="">Todos</option>
-              {FUNCIONARIOS.map((f) => (
+              {colegas.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.nome}
                 </option>
