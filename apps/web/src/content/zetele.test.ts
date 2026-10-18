@@ -20,9 +20,9 @@ const lerBase = (canal: "publico" | "sistema") =>
 const ROTAS = sitemap().map((e) => new URL(e.url).pathname);
 
 describe("Zétele: conteúdo", () => {
-  it("aparece no Início, na Central, no Observatório, no Painel e na área logada", () => {
+  it("aparece no Início, na Central, no Observatório, no Painel, no Crédito rural e na área logada", () => {
     expect([...PAGINAS_COM_ZETELE].sort()).toEqual([
-      "/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel",
+      "/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/credito-rural", "/painel",
       "/sistema", "/sistema/agenda", "/sistema/atividades", "/sistema/contas", "/sistema/espacos", "/sistema/frotas", "/sistema/relatorios",
     ]);
     expect(ehPaginaComZetele("/sistema/frotas")).toBe(true);
@@ -41,11 +41,22 @@ describe("Zétele: conteúdo", () => {
   });
 
   it("tem as perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
-    expect(PERGUNTAS).toHaveLength(24);
+    expect(PERGUNTAS).toHaveLength(27);
     for (const p of PERGUNTAS.filter((q) => q.tipo === "estatica")) {
       expect(p.resposta, p.id).toBeTruthy();
       expect([...ROTAS, ...PAGINAS_COM_ZETELE], p.id).toContain(p.href!.split("?")[0]);
     }
+  });
+
+  it("no Crédito rural as sugestões explicam o Pronaf, a fonte e o ano incompleto, sem inventar números", () => {
+    const { visiveis } = perguntasDaPagina("/credito-rural");
+    expect(visiveis.map((p) => p.id)).toEqual(["credito-pronaf", "credito-fonte", "credito-ano", "painel-observatorio"]);
+    for (const p of visiveis.slice(0, 3)) {
+      expect(p.tipo).toBe("estatica");
+      expect(p.href).toBe("/credito-rural");
+      expect(p.resposta).not.toMatch(/R\$\s*\d/);
+    }
+    expect(visiveis[1]!.resposta).toContain("ODbL");
   });
 
   it("cada página mostra 4 perguntas que existem, e o resto vai para 'mais sugestões'", () => {

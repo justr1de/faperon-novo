@@ -1,5 +1,6 @@
 import { CENTRAL } from "./central";
 import { CONTATO } from "./contato";
+import { CREDITO } from "./credito";
 import { INFORMATIVOS } from "./informativos";
 
 export const PAGINAS_COM_ZETELE = [
@@ -7,6 +8,7 @@ export const PAGINAS_COM_ZETELE = [
   "/central-de-inteligencia",
   "/central-de-inteligencia/observatorio",
   "/painel",
+  "/credito-rural",
   "/sistema",
   "/sistema/agenda",
   "/sistema/frotas",
@@ -77,6 +79,31 @@ export const PERGUNTAS: PerguntaPronta[] = [
       'No Painel Agro Analítico, escolha o produto, o indicador e o período. Depois clique em "Gerar PDF", na barra do recorte, no alto da página. O relatório sai com os dados e a análise do recorte escolhido.',
     href: "/painel",
     rotuloLink: "Abrir o Painel Agro Analítico",
+  },
+  {
+    id: "credito-pronaf",
+    texto: "O que é o Pronaf?",
+    tipo: "estatica",
+    resposta: CREDITO.nota.pronaf,
+    href: "/credito-rural",
+    rotuloLink: "Abrir o painel de crédito rural",
+  },
+  {
+    id: "credito-fonte",
+    texto: "De onde vêm os dados do crédito rural?",
+    tipo: "estatica",
+    resposta:
+      "Da Matriz de Dados do Crédito Rural (SICOR) do Banco Central do Brasil, publicada em dados abertos com a licença ODbL. O painel mostra os totais por município e por mês, sem operações individuais nem valores por produtor.",
+    href: "/credito-rural",
+    rotuloLink: "Ver a nota metodológica",
+  },
+  {
+    id: "credito-ano",
+    texto: "Por que o ano atual aparece incompleto?",
+    tipo: "estatica",
+    resposta: `${CREDITO.nota.defasagem} No painel, o aviso de ano incompleto diz até que mês há dados.`,
+    href: "/credito-rural",
+    rotuloLink: "Abrir o painel de crédito rural",
   },
   { id: "soja", texto: "Qual município mais produz soja em Rondônia?", tipo: "dados" },
   { id: "gado", texto: "Quantas cabeças de gado tem Rondônia hoje?", tipo: "dados" },
@@ -247,6 +274,7 @@ export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/central-de-inteligencia": ["painel-observatorio", "soja", "preco", "pdf"],
   "/painel": ["pdf", "soja", "preco", "gado"],
   "/central-de-inteligencia/observatorio": ["painel-observatorio", "cafe", "preco", "soja"],
+  "/credito-rural": ["credito-pronaf", "credito-fonte", "credito-ano", "painel-observatorio"],
   "/sistema": ["sis-evento", "sis-atividade", "sis-voz", "sis-relatorio"],
   "/sistema/agenda": ["sis-evento", "sis-voz", "sis-agenda-outros", "sis-reserva"],
   "/sistema/frotas": ["sis-reserva", "sis-voz", "sis-km", "sis-custos"],
