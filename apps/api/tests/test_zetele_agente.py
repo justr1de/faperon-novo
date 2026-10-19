@@ -173,7 +173,7 @@ def test_na_central_as_ferramentas_estao_disponiveis(dados_soja: Produto) -> Non
     assert "só orienta" not in cli.pedidos[0]["messages"][-1]["content"]
 
 
-def test_na_area_logada_ele_so_explica_o_uso_sem_ferramentas(dados_soja: Produto) -> None:
+def test_na_area_logada_explica_o_uso_com_as_ferramentas_disponiveis(dados_soja: Produto) -> None:
     cli = ClienteLLMFalso(
         [final("resposta", "Em [Frotas](/sistema/frotas), aba Reservas, clique em Nova reserva.")]
     )
@@ -181,12 +181,26 @@ def test_na_area_logada_ele_so_explica_o_uso_sem_ferramentas(dados_soja: Produto
     assert r.status == "respondida"
     assert r.texto == "Em [Frotas](/sistema/frotas), aba Reservas, clique em Nova reserva."
     pedido = cli.pedidos[0]
-    assert pedido["tools"] == []
-    assert [b["text"] for b in pedido["system"]] == [PERSONA_SISTEMA]
+    assert len(pedido["tools"]) == 4
+    assert pedido["system"][0]["text"] == PERSONA_SISTEMA
     # o RAG do sistema manda o trecho da página e não mistura a base do site público
     mensagem = pedido["messages"][-1]["content"]
     assert "<base_de_conhecimento>" in mensagem and "Gestão de frotas" in mensagem
     assert "Painel Agro Analítico" not in mensagem
+
+
+def test_no_sistema_responde_numero_do_agro_pela_ferramenta(dados_soja: Produto) -> None:
+    # pedido de 18/10/2026: o Zétele interno também responde números do agro, pelas ferramentas
+    texto = f"Em 2024, Ariquemes liderou com {formatar_numero(450)} toneladas. Veja [o ranking]({URL_SOJA})."
+    cli = ClienteLLMFalso([ferramenta("ranking_municipios", SOJA), final("resposta", texto)])
+    r = responder(cli, "qual município mais produz soja?", [], "/sistema", canal=SISTEMA)
+    assert r.status == "respondida"
+    assert r.texto == texto and formatar_numero(450) in r.texto
+    assert r.fontes[0]["url_interna"] == URL_SOJA
+    resultado = cli.pedidos[1]["messages"][-1]["content"][0]
+    assert resultado["type"] == "tool_result" and "Ariquemes" in resultado["content"]
+    assert len(cli.pedidos[0]["tools"]) == 4
+    assert "Catálogo de dados" in cli.pedidos[0]["system"][-1]["text"]
 
 
 def test_no_site_publico_os_trechos_vem_da_base_publica(dados_soja: Produto) -> None:

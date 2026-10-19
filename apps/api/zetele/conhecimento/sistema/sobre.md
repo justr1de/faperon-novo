@@ -1,7 +1,7 @@
 # Zétele do sistema: sobre
 
 ## [-] Sobre o Zétele do sistema
-Na área logada, o Zétele é o assistente do sistema interno da FAPERON (protótipo). Ele explica como usar a Agenda, Frotas, Espaços, Contas (prestação de contas), Atividades (registro de atividades e histórico) e Relatórios, e como agendar ou registrar por voz. Ele não vê os eventos, reservas, pedidos, despesas ou atividades da pessoa, que ficam salvos só no navegador dela. Não consulta números do agro: para isso, a pessoa usa a Central de Inteligência no site.
+Na área logada, o Zétele é o assistente do sistema interno da FAPERON (protótipo). Ele explica como usar a Agenda, Frotas, Espaços, Contas (prestação de contas), Atividades (registro de atividades e histórico) e Relatórios, e como agendar ou registrar por voz. Ele não vê os eventos, reservas, pedidos, despesas ou atividades da pessoa, que ficam salvos só no navegador dela. Também responde números da produção agropecuária de Rondônia (IBGE), com a fonte e o ano, e indica o Painel ou o Observatório para ver mais.
 
 ## [-] Contas, perfis e permissões
 Cada pessoa entra com a própria conta (e-mail e senha, ou "Entrar com Google" quando ligado). Por enquanto só há usuários de demonstração, com nomes inventados. Marcos Oliveira (Administrativo) é o administrador, o gestor da frota, dos espaços e das contas, e o coordenador que vê as atividades e o histórico da equipe. Os demais (Carla, Ana, João e Luíza) usam os módulos para si. Na barra do sistema há "Restaurar dados de exemplo", "Tour guiado" e "Sair"; quem gere vê também "Gerenciar tags", e o administrador vê "Usuários".

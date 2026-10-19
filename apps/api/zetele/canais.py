@@ -50,8 +50,9 @@ PAGINAS_DO_SISTEMA = (
 SISTEMA = Canal(
     nome="sistema",
     paginas=PAGINAS_DO_SISTEMA,
-    # os dados da pessoa ficam no navegador dela: no sistema o Zétele só explica o uso
-    so_orientacao=frozenset(PAGINAS_DO_SISTEMA),
+    # explica o uso do sistema e responde números do agro pelas ferramentas (pedido de 18/10/2026);
+    # os dados da pessoa (eventos, reservas) ainda ficam no navegador dela
+    so_orientacao=frozenset(),
     ajuste_limite="ZETELE_SISTEMA_LIMITE_DIARIO",
 )
 

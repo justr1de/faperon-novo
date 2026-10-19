@@ -20,10 +20,11 @@ def test_persona_publica_proibe_numero_sem_ferramenta_e_pede_json() -> None:
     assert "tipo" in PERSONA_PUBLICO and "sugestoes" in PERSONA_PUBLICO
 
 
-def test_persona_do_sistema_so_explica_o_uso_e_nao_ve_os_dados() -> None:
+def test_persona_do_sistema_explica_o_uso_responde_o_agro_e_nao_ve_os_dados() -> None:
     assert "sistema interno" in PERSONA_SISTEMA
     assert "não vê os dados da pessoa" in PERSONA_SISTEMA
-    assert "ferramenta" not in PERSONA_SISTEMA
+    # agora responde também números do agro, sempre pelas ferramentas (pedido de 18/10/2026)
+    assert "ferramentas" in PERSONA_SISTEMA and "_formatado" in PERSONA_SISTEMA
     assert "tipo" in PERSONA_SISTEMA and "sugestoes" in PERSONA_SISTEMA
 
 
@@ -59,4 +60,6 @@ def test_system_e_identico_byte_a_byte_entre_montagens(dados_soja: Produto) -> N
     assert a == b
     assert "Catálogo de dados" in a[-1]["text"]
     sistema = system_atual(SISTEMA)
-    assert [b["text"] for b in sistema] == [PERSONA_SISTEMA]
+    assert sistema == system_atual(SISTEMA)
+    assert sistema[0]["text"] == PERSONA_SISTEMA
+    assert "Catálogo de dados" in sistema[-1]["text"]

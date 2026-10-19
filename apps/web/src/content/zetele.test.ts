@@ -7,7 +7,7 @@ import sitemap from "@/app/sitemap";
 import { CENTRAL } from "./central";
 import { CONTATO } from "./contato";
 import { OBSERVATORIO } from "./observatorio";
-import { ORDEM_POR_PAGINA, PAGINAS_COM_ZETELE, PERGUNTAS, ehPaginaComZetele, perguntasDaPagina } from "./zetele";
+import { ORDEM_POR_PAGINA, PAGINAS_COM_ZETELE, PAGINAS_SO_ORIENTACAO, PERGUNTAS, ehPaginaComZetele, perguntasDaPagina } from "./zetele";
 
 // Mesmo padrão de content.test.ts: no jsdom, import.meta.url não é file://.
 // Bases do RAG de cada Zétele (ADR 0032): todos os .md da pasta do canal.
@@ -41,7 +41,7 @@ describe("Zétele: conteúdo", () => {
   });
 
   it("tem as perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
-    expect(PERGUNTAS).toHaveLength(29);
+    expect(PERGUNTAS).toHaveLength(30);
     for (const p of PERGUNTAS.filter((q) => q.tipo === "estatica")) {
       expect(p.resposta, p.id).toBeTruthy();
       expect([...ROTAS, ...PAGINAS_COM_ZETELE], p.id).toContain(p.href!.split("?")[0]);
@@ -74,6 +74,13 @@ describe("Zétele: conteúdo", () => {
       expect([...visiveis, ...demais].every((p) => p.area === "sistema"), pagina).toBe(true);
     }
     expect(perguntasDaPagina("/").demais.some((p) => p.area === "sistema")).toBe(false);
+  });
+
+  it("na área logada há pergunta do agro, e só o Início fica sem dados (pedido de 18/10/2026)", () => {
+    expect(PAGINAS_SO_ORIENTACAO).toEqual(["/"]);
+    const cafe = PERGUNTAS.find((p) => p.id === "sis-cafe")!;
+    expect(cafe).toMatchObject({ area: "sistema", tipo: "dados", texto: "Qual município mais produz café em Rondônia?" });
+    expect(perguntasDaPagina("/sistema").demais.map((p) => p.id)).toContain("sis-cafe");
   });
 
   it("no Início só há perguntas de orientação (estáticas)", () => {

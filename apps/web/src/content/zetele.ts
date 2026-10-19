@@ -271,6 +271,8 @@ export const PERGUNTAS: PerguntaPronta[] = [
     href: "/sistema/atividades?aba=historico",
     rotuloLink: "Abrir o Histórico",
   },
+  // o Zétele interno também responde números do agro, pelas ferramentas (pedido de 18/10/2026)
+  { id: "sis-cafe", area: "sistema", texto: "Qual município mais produz café em Rondônia?", tipo: "dados" },
   {
     id: "sis-usuarios",
     area: "sistema",
@@ -282,12 +284,11 @@ export const PERGUNTAS: PerguntaPronta[] = [
   },
 ];
 
-/** No Início o Zétele só orienta (sem dados); perguntas de dados e preços ficam na Central. */
-/** No sistema os dados ficam no navegador da pessoa: o Zétele só explica como usar cada módulo. */
-export const PAGINAS_SO_ORIENTACAO: readonly PaginaComZetele[] = [
-  "/",
-  ...PAGINAS_COM_ZETELE.filter((p) => p.startsWith("/sistema")),
-];
+/**
+ * No Início o Zétele só orienta (sem dados); perguntas de dados e preços ficam na Central.
+ * No sistema ele explica o uso e também responde números do agro (pedido de 18/10/2026).
+ */
+export const PAGINAS_SO_ORIENTACAO: readonly PaginaComZetele[] = ["/"];
 
 export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/": ["central", "painel-observatorio", "informativos", "contato"],
