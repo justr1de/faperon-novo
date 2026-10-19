@@ -34,5 +34,5 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["indicadores", "analise", "ingestao", "zetele"]
+source = ["indicadores", "analise", "ingestao", "zetele", "whatsapp"]
 omit = ["*/migrations/*", "*/management/*", "*/tests/*"]

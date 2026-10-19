@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "credito",
     "zetele",
     "usuarios",
+    "whatsapp",
     "rest_framework",
     "drf_spectacular",
     "django.contrib.auth",
@@ -154,6 +155,7 @@ REST_FRAMEWORK = {
         "zetele_voz_global": os.environ.get("ZETELE_VOZ_GLOBAL_RATE_LIMIT", "30/min"),
         # entrar, entrar com Google e trocar a senha, por IP (o bloqueio por falhas é à parte)
         "auth": os.environ.get("AUTH_RATE_LIMIT", "10/min"),
+        "whatsapp_webhook": os.environ.get("WHATSAPP_WEBHOOK_RATE_LIMIT", "120/min"),
     },
     "EXCEPTION_HANDLER": "indicadores.api.erros.tratador_de_excecoes",
     "NUM_PROXIES": int(os.environ.get("NUM_PROXIES", "1")),
@@ -215,3 +217,22 @@ LOGGING = {
         "django.utils.autoreload": {"level": "WARNING"},
     },
 }
+
+# Site público, para links absolutos fora do navegador (WhatsApp). O .env do servidor já o define.
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:3000")
+
+# Zétele no WhatsApp (ADR 0037). Desligado por padrão: com WHATSAPP_ATIVO=false o webhook dá 404.
+WHATSAPP_ATIVO = env_bool("WHATSAPP_ATIVO")
+WHATSAPP_PROVEDOR = os.environ.get("WHATSAPP_PROVEDOR", "twilio")
+# A assinatura do Twilio é calculada sobre a URL pública exata: nunca sobre o Host da requisição.
+WHATSAPP_URL_WEBHOOK = os.environ.get(
+    "WHATSAPP_URL_WEBHOOK", f"{SITE_URL.rstrip('/')}/api/v1/whatsapp/webhook"
+)
+# número do Sandbox do Twilio; o número da FAPERON entra aqui quando houver
+WHATSAPP_NUMERO = os.environ.get("WHATSAPP_NUMERO", "whatsapp:+14155238886")
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
+WHATSAPP_LIMITE_POR_HORA = int(os.environ.get("WHATSAPP_LIMITE_POR_HORA", "30"))
+# o Sandbox envia no máximo uma mensagem a cada 3 s
+WHATSAPP_INTERVALO_ENVIO = float(os.environ.get("WHATSAPP_INTERVALO_ENVIO", "3"))
+WHATSAPP_PASTA_MIDIA = os.environ.get("WHATSAPP_PASTA_MIDIA", "/app/midia/whatsapp")
