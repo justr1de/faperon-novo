@@ -262,3 +262,49 @@ def test_zetele_publico_continua_aberto(api: APIClient) -> None:
 
 def test_zetele_do_sistema_abre_com_login(api_logado: APIClient) -> None:
     assert api_logado.get("/api/v1/sistema/zetele/estado").status_code == 200
+
+
+# ---------- telefone (WhatsApp, ADR 0037) ----------
+
+
+def test_criar_recusa_telefone_de_outro_usuario(api_admin: APIClient) -> None:
+    assert novo(api_admin, telefone="+5569999990000").status_code == 201
+    r = novo(api_admin, email="ana2@exemplo.faperon.br", telefone="+5569999990000")
+    assert r.status_code == 400
+    assert r.json()["campos"]["telefone"] == "Este telefone já está no cadastro de outro usuário."
+
+
+def test_varios_usuarios_sem_telefone(api_admin: APIClient) -> None:
+    assert novo(api_admin).status_code == 201
+    assert novo(api_admin, email="ana2@exemplo.faperon.br", telefone="").status_code == 201
+
+
+def test_editar_mantem_o_proprio_telefone_e_registra_a_troca(
+    api_admin: APIClient, criar_conta: Any
+) -> None:
+    criar_conta()
+    rota = "/api/v1/usuarios/carla"
+    assert api_admin.patch(rota, {"telefone": "+5569999990000"}, format="json").status_code == 200
+    assert api_admin.patch(rota, {"telefone": "+5569999990000"}, format="json").status_code == 200
+    registro = RegistroDeConta.objects.filter(acao=RegistroDeConta.Acao.EDITOU).first()
+    assert registro is not None and "telefone" in registro.detalhe
+    # o registro guarda o nome do campo, nunca o número
+    assert "9999" not in registro.detalhe
+
+
+def test_editar_recusa_telefone_de_outro(api_admin: APIClient, criar_conta: Any) -> None:
+    criar_conta()
+    novo(api_admin, telefone="+5569999990000")
+    r = api_admin.patch("/api/v1/usuarios/carla", {"telefone": "+5569999990000"}, format="json")
+    assert r.status_code == 400
+    assert "telefone" in r.json()["campos"]
+
+
+def test_banco_recusa_telefone_repetido(criar_conta: Any) -> None:
+    from django.db import IntegrityError, transaction
+
+    a = criar_conta()
+    b = criar_conta(email="ana@exemplo.faperon.br", nome="Ana Ribeiro", codigo="ana")
+    Perfil.objects.filter(usuario=a).update(telefone="+5569999990000")
+    with pytest.raises(IntegrityError), transaction.atomic():
+        Perfil.objects.filter(usuario=b).update(telefone="+5569999990000")

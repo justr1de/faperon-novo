@@ -118,6 +118,23 @@ describe("tela Usuários (ADR 0035)", () => {
     expect(await within(dialogo).findByRole("alert")).toHaveTextContent("Já existe uma conta com este e-mail.");
   });
 
+  it("mostra o erro do servidor no campo (telefone de outro usuário)", async () => {
+    entrarComo("marcos");
+    api({
+      "GET /api/v1/usuarios": () => Response.json(LISTA),
+      "POST /api/v1/usuarios": () => Response.json({ erro: "Parâmetros inválidos", campos: { telefone: "Este telefone já está no cadastro de outro usuário." } }, { status: 400 }),
+    });
+    const user = userEvent.setup();
+    renderizar();
+    await user.click(await screen.findByRole("button", { name: "Novo usuário" }));
+    const dialogo = screen.getByRole("dialog", { name: "Novo usuário" });
+    await user.type(within(dialogo).getByLabelText("Nome"), "Ana Dois");
+    await user.type(within(dialogo).getByLabelText("E-mail"), "ana2@exemplo.faperon.br");
+    await user.type(within(dialogo).getByLabelText("Telefone (opcional)"), "+5569999990000");
+    await user.click(within(dialogo).getByRole("button", { name: "Criar usuário" }));
+    expect(await within(dialogo).findByRole("alert")).toHaveTextContent("Este telefone já está no cadastro de outro usuário.");
+  });
+
   it("edita uma conta pelo diálogo", async () => {
     entrarComo("marcos");
     const buscar = api({

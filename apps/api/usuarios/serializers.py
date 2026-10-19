@@ -77,6 +77,18 @@ class DadosDoUsuarioSerializer(serializers.Serializer):
             raise serializers.ValidationError("Já existe uma conta com este e-mail.")
         return valor
 
+    def validate_telefone(self, valor: str) -> str:
+        valor = valor.strip()
+        if not valor:
+            return valor
+        perfil: Perfil | None = self.context.get("perfil")
+        outros = Perfil.objects.filter(telefone=valor)
+        if perfil is not None:
+            outros = outros.exclude(pk=perfil.pk)
+        if outros.exists():
+            raise serializers.ValidationError("Este telefone já está no cadastro de outro usuário.")
+        return valor
+
 
 class UsuarioCriadoSerializer(serializers.Serializer):
     usuario = UsuarioDaAdministracaoSerializer()

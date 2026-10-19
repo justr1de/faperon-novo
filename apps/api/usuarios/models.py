@@ -50,6 +50,12 @@ class Perfil(models.Model):
     class Meta:
         db_table = "usuarios_perfil"
         ordering = ["nome"]
+        constraints = [
+            # o WhatsApp reconhece o funcionário pelo telefone (ADR 0037): um número, uma pessoa
+            models.UniqueConstraint(
+                fields=["telefone"], condition=~models.Q(telefone=""), name="perfil_telefone_unico"
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.nome} ({self.codigo})"
