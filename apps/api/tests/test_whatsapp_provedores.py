@@ -3,6 +3,7 @@
 import base64
 import hashlib
 import hmac
+import traceback
 from typing import Any
 
 import pytest
@@ -112,8 +113,10 @@ def test_envia_audio_pela_url(twilio: ProvedorTwilio) -> None:
 )
 def test_erros_do_envio(twilio: ProvedorTwilio, status: int, erro: type[Exception]) -> None:
     responses.post(MENSAGENS, json={"code": 63016}, status=status)
-    with pytest.raises(erro):
+    with pytest.raises(erro) as info:
         twilio.enviar_texto("+556999990000", "Olá")
+    assert SID not in str(info.value)
+    assert "+5569" not in str(info.value)
 
 
 @responses.activate
@@ -123,13 +126,62 @@ def test_rede_fora_e_temporario(twilio: ProvedorTwilio) -> None:
         twilio.enviar_texto("+556999990000", "Olá")
 
 
+def rastro(exc: BaseException) -> str:
+    """O que o logger.exception imprimiria: a exceção e a cadeia de causas."""
+    return "".join(traceback.format_exception(exc))
+
+
+@responses.activate
+def test_rede_fora_nao_leva_sid_nem_telefone_ao_traceback(twilio: ProvedorTwilio) -> None:
+    # a mensagem do urllib3 traz a URL, com o SID da conta
+    responses.post(
+        MENSAGENS,
+        body=requests.ConnectionError(
+            f"Max retries exceeded with url: /2010-04-01/Accounts/{SID}/Messages.json"
+        ),
+    )
+    # o telefone vai numa variável para não aparecer na linha do teste dentro do traceback
+    telefone = "+556999990000"
+    with pytest.raises(ErroTemporario) as info:
+        twilio.enviar_texto(telefone, "Olá")
+    assert SID not in rastro(info.value)
+    assert telefone not in rastro(info.value)
+
+
+@responses.activate
+def test_download_fora_nao_leva_sid_nem_url_ao_traceback(twilio: ProvedorTwilio) -> None:
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{SID}/Messages/MM1/Media/ME1"
+    responses.get(url, body=requests.ConnectionError(f"Max retries exceeded with url: {url}"))
+    with pytest.raises(ErroTemporario) as info:
+        twilio.baixar_midia(url, limite=100)
+    assert SID not in rastro(info.value)
+    assert "/Media/ME1" not in rastro(info.value)
+
+
 @responses.activate
 def test_baixa_midia_e_respeita_o_limite(twilio: ProvedorTwilio) -> None:
-    url = "https://api.twilio.com/2010-04-01/Accounts/x/Messages/SM1/Media/ME1"
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{SID}/Messages/MM1/Media/ME1"
     responses.get(url, body=b"OggS" + b"0" * 10, status=200)
     assert twilio.baixar_midia(url, limite=100) == b"OggS" + b"0" * 10
     with pytest.raises(ErroDefinitivo):
         twilio.baixar_midia(url, limite=5)
+
+
+@responses.activate
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://exemplo.com/2010-04-01/Accounts/x/Messages/MM1/Media/ME1",
+        "https://api.twilio.com.exemplo.com/2010-04-01/Accounts/x/Messages/MM1/Media/ME1",
+        "http://api.twilio.com/2010-04-01/Accounts/x/Messages/MM1/Media/ME1",
+        "https://api.twilio.com/2010-04-01/Outra/x",
+    ],
+)
+def test_download_so_da_api_do_twilio(twilio: ProvedorTwilio, url: str) -> None:
+    # sem rota registrada: se o provedor tentasse baixar, o responses daria ConnectionError
+    with pytest.raises(ErroDefinitivo, match="mídia fora do Twilio"):
+        twilio.baixar_midia(url, limite=100)
+    assert len(responses.calls) == 0
 
 
 def test_falso_registra_e_falha_em_ordem() -> None:

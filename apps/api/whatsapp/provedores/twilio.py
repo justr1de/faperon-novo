@@ -46,6 +46,9 @@ class ProvedorTwilio:
         )
 
     def baixar_midia(self, url: str, limite: int) -> bytes:
+        # a URL vem do corpo do webhook: só baixa da API do Twilio, para o SID e o token não irem a outro host
+        if not url.startswith(f"{self.URL_API}/Accounts/"):
+            raise ErroDefinitivo("mídia fora do Twilio")
         # o Twilio redireciona para o armazenamento dele; o requests não repassa a senha a outro host
         try:
             with requests.get(
@@ -61,7 +64,8 @@ class ProvedorTwilio:
                     partes.append(parte)
                 return b"".join(partes)
         except requests.RequestException as exc:
-            raise ErroTemporario(type(exc).__name__) from exc
+            # from None: a exceção original traz a URL (com o SID e a mídia) e iria para o traceback do log
+            raise ErroTemporario(type(exc).__name__) from None
 
     def enviar_texto(self, telefone: str, texto: str) -> None:
         self._enviar({"To": PREFIXO + telefone, "From": self._numero, "Body": texto})
@@ -78,7 +82,8 @@ class ProvedorTwilio:
                 timeout=TEMPO_LIMITE,
             )
         except requests.RequestException as exc:
-            raise ErroTemporario(type(exc).__name__) from exc
+            # from None: a URL da exceção original tem o SID da conta
+            raise ErroTemporario(type(exc).__name__) from None
         self._conferir(r)
 
     @staticmethod
