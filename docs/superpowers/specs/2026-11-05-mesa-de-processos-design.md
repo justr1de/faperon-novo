@@ -152,7 +152,7 @@ O "comentário", que outras unidades veem, é um andamento do tipo `comentario`.
 
 ### 6.3 Permissões (entrega 1)
 
-- **Ver o processo:** qualquer pessoa da organização com lotação vigente, já que todo processo é público interno até a entrega 4. Administrador e auditor também veem.
+- **Ver o processo:** qualquer pessoa da organização com lotação vigente, já que todo processo é público interno até a entrega 4. O administrador também vê. O papel de auditor, que lê tudo sem agir, entra com a Etapa C do multitenant.
 - **Agir na mesa** (enviar, atribuir, concluir, incluir documento, marcar, anotar): membro ou gestor da unidade onde o processo está aberto.
 - **Cadastrar mesas, lotações, tipos de processo, tipos de documento e modelos:** administrador. O **gestor** cuida dos marcadores da mesa e da visão padrão.
 - **Onde fica a regra:** toda consulta passa por `Processo.objects.visiveis_para(usuario)` e toda ação por `pode_agir(usuario, processo, unidade)`. Os testes cobrem cada combinação de papel e situação.
