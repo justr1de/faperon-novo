@@ -82,8 +82,8 @@ Legenda: **A fazer**, **Em andamento**, **Feito** (com o commit), **Bloqueado** 
 
 | Ticket | Descrição | Situação |
 |---|---|---|
-| 11.0.1 | Desenho (spec) e tickets do épico | Em revisão |
-| 11.0.2 | Plano de implementação da entrega 1 (skill writing-plans) | A fazer |
+| 11.0.1 | Desenho (spec) e tickets do épico | Feito (aprovado para seguir em 05/11; ajustes durante a implementação) |
+| 11.0.2 | Plano de implementação da entrega 1 (skill writing-plans) | Em andamento: decisões em `docs/continuidade/2026-11-05-mesa-de-processos.md`; plano 1A ainda não gravado |
 | 11.0.3 | Dados da FAPERON: tipos de processo da Ping com códigos, departamentos e siglas, pessoas do COMINST com papéis | Aguardando o usuário |
 | 11.0.4 | Modelos de documento da Ping (COMINST primeiro) | Aguardando o usuário |
 
