@@ -12,6 +12,68 @@ Substituir a Ping. como sistema de processos da FAPERON, com mesa por departamen
 - Backup: push do branch `feat/mesa-de-processos` para o remoto `fork` ao fim de cada entrega e depois de tickets grandes. Nunca no `main` do `origin` sem confirmação, porque ele publica o site.
 - Erros cometidos pelo caminho vão para `docs/erros-conhecidos/dificuldades.md`, na seção "Mesa de processos".
 
+## Ordem de construção
+
+A sequência segue as dependências: cada passo só usa o que os anteriores já entregaram e testaram. Dentro de cada fase, a ordem é obrigatória. Os passos marcados com ∥ podem correr em paralelo com a fase em que estão.
+
+**Fase 0: preparação**
+1. 11.0.2 Plano da entrega 1 (parte 1A, backend; a parte 1B, telas, é escrita quando a API estiver pronta).
+2. ∥ 11.0.3 e 11.0.4 Dados e modelos da FAPERON (com o usuário, em paralelo às fases 1 a 4).
+
+**Fase 1: fundação de dados (backend)**
+3. Organização (FAPERON, código `14`, sequencial inicial 5000) e armazenamento de arquivos (disco ou S3).
+4. Cadastros: mesas, lotações, tipos de processo e de documento, mais as regras básicas de permissão (11.1.1).
+5. Número no padrão da Ping: montar, formatar e ler (11.1.2, parte 1).
+6. Numerador sem buracos, com teste de concorrência (11.1.2, parte 2).
+7. Processo, presença nas mesas e andamentos imutáveis com cadeia de hash (11.1.3).
+
+**Fase 2: regras do processo (backend)**
+8. Abrir, enviar, ver, concluir e reabrir, com as permissões (11.1.4 e 11.1.5).
+9. Atribuir, prazo, sobrestar, retomar, ciência e comentário (11.1.4).
+10. Documentos externos: upload conferido, hash, armazenamento, cancelar (11.1.6).
+11. Organização da mesa e consultas: marcadores, anotações, acompanhamento, visões, abas, filtros, contadores, busca (11.1.7).
+12. Relacionar processos, exportar o PDF do processo, "Remeter à Ping" (11.1.8 e 11.1.9).
+
+**Fase 3: API (backend)**
+13. API da mesa e do processo (11.1.10, parte 1).
+14. API de documentos, exportação, relacionamentos (11.1.10, parte 2).
+15. API de organização da mesa e de cadastros (11.1.10, parte 3).
+
+**Fase 4: telas do núcleo (front, plano 1B)**
+16. Telas de cadastro (11.1.13). Vêm primeiro porque, sem mesas e tipos, nada mais funciona na tela.
+17. Abrir processo e página do processo (11.1.12).
+18. Mesa (11.1.11).
+19. e2e do núcleo, ADR 0038, backup (11.1.14). **Marco: núcleo pronto.**
+
+**Fase 5: editor e modelos (entrega 2)**
+20. Dados dos modelos e do papel timbrado (11.2.1). Depois, a geração do PDF e do Word (11.2.2) e a numeração com o código de verificação (11.2.3).
+21. Editor TipTap (11.2.4). Depois, a tela "Incluir documento" (11.2.5), as versões (11.2.6) e a gestão de modelos (11.2.7).
+22. Biblioteca de modelos do COMINST (11.2.8, depende do 11.0.4). Depois, o e2e e a ADR 0039 (11.2.9). **Marco: editor pronto.**
+
+**Fase 6: assinador dos funcionários (entrega 3, primeira parte)**
+23. Interface de provedor e o provedor falso (11.3.1). Depois, o segundo fator TOTP (11.3.2).
+24. Provedor próprio (11.3.3). Depois, o selo e-CNPJ (11.3.4), a fila e a assinatura em lote (11.3.5) e a página `/verificar` (11.3.6).
+
+**Fase 7: virada do COMINST**
+25. Cadastro manual de processo antigo (11.5.1) e subida em massa de PDFs (11.5.3). Vêm antes do piloto, porque o COMINST precisa dos processos abertos dele no sistema novo.
+26. Carga dos dados do COMINST: mesa, pessoas, tipos e modelos.
+27. Uma semana de piloto em paralelo com a Ping. Correções.
+28. Virada do COMINST (11.5.5). **Marco: COMINST fora da Ping.**
+
+**Fase 8: assinatura de pessoas de fora (entrega 3, segunda parte)**
+29. E-mail pelo SES (11.3.7). Depois, a pessoa de fora (11.3.8) e o órgão público (11.3.9). Fecha com o e2e e a ADR 0040 (11.3.10).
+
+**Fase 9: níveis de acesso (entrega 4)**
+30. Público, restrito e sigiloso (11.4.1), credencial (11.4.2) e registro de quem viu (11.4.3). **Tem de ficar pronto antes de o DP (departamento pessoal) entrar**, porque os processos dele trazem dados pessoais sensíveis.
+
+**Fase 10: os outros departamentos**
+31. ∥ Importação da planilha (11.5.2) e da exportação oficial da Ping (11.5.4), assim que a Ping ou o botão "Exportar" derem o material.
+32. Virada de cada departamento (CONT, FIN, COMPRAS, DP…), com piloto curto em cada um.
+
+**Fase 11: vínculos e relatórios (entrega 6, depois do épico 5)**
+33. Estatísticas por mesa (11.6.5). Não dependem da Etapa A, então podem vir antes.
+34. Depois da Etapa A: `ItemProcesso` (11.6.1), reservas (11.6.2), ações avulsas (11.6.4) e diárias com a Viagem (11.6.3, depois do épico 6).
+
 ## Situação dos tickets
 
 Legenda: **A fazer**, **Em andamento**, **Feito** (com o commit), **Bloqueado** (com o motivo).
@@ -73,7 +135,7 @@ Legenda: **A fazer**, **Em andamento**, **Feito** (com o commit), **Bloqueado** 
 | 11.3.9 | Documento para órgão público: baixar, subir o assinado pelo gov.br ou ICP-Brasil e validar (pyHanko com as raízes guardadas) | A fazer |
 | 11.3.10 | e2e do assinador, ADR 0040, erros conhecidos e backup | A fazer |
 
-**Marco do COMINST:** entregas 1, 2 e 3 (até o 11.3.6), mais os modelos do COMINST e uma semana de piloto em paralelo com a Ping.
+**Marco do COMINST:** entregas 1, 2 e 3 (até o 11.3.6), mais o cadastro manual de processos antigos (11.5.1 e 11.5.3), os modelos do COMINST e uma semana de piloto em paralelo com a Ping. Ver a "Ordem de construção" acima.
 
 ### Entrega 4: níveis de acesso
 

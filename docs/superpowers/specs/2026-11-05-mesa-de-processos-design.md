@@ -64,7 +64,7 @@ Cada entrega é usável sozinha e fecha com a suíte completa verde, revisão e 
 | 5 | **Importação da Ping** | Cadastro manual pelo número da Ping, importação da planilha exportada da mesa da Ping, subida em massa dos PDFs pelo número no nome do arquivo e importador da exportação oficial, se ela vier | 1, 2 |
 | 6 | **Vínculos e relatórios** | Documentos de reserva e de viagem criam o registro nos módulos, itens dos módulos ligados ao processo, ações avulsas, estatísticas por mesa | 1 a 3 e a Etapa A |
 
-**Marco do COMINST:** entregas 1, 2 e 3 (só a parte dos funcionários), mais os modelos do COMINST carregados e uma semana de piloto em paralelo com a Ping. As entregas 3b (pessoas de fora), 4 e 5 vêm logo em seguida. A ordem das entregas 4 e 5 pode trocar, conforme a Ping responda ao pedido de exportação.
+**Marco do COMINST:** entregas 1, 2 e 3 (só a parte dos funcionários), mais o cadastro manual e a subida em massa de processos antigos da entrega 5 (para trazer os processos abertos do COMINST), os modelos do COMINST carregados e uma semana de piloto em paralelo com a Ping. A ordem completa está em "Ordem de construção", em `docs/backlog/e11-mesa-de-processos.md`. As entregas 3b (pessoas de fora), 4 e 5 vêm logo em seguida. A ordem das entregas 4 e 5 pode trocar, conforme a Ping responda ao pedido de exportação.
 
 ## 5. Modelo de dados
 
@@ -213,7 +213,7 @@ Cada ticket fecha com a suíte inteira verde:
 Os testes que esta entrega exige além do usual:
 - **Numerador concorrente:** 20 threads abrindo processos ao mesmo tempo, sem número repetido e sem buraco; rollback no meio não gasta número.
 - **Imutabilidade:** `UPDATE` e `DELETE` em `Andamento` e `EvidenciaAssinatura` falham no banco, e a verificação da cadeia acusa adulteração feita por fora.
-- **Número no padrão da Ping:** formatar e ler de volta; aceitar com e sem máscara; o sequencial de 5 dígitos; os 13 números reais do adendo de 29/10 lidos corretamente.
+- **Número no padrão da Ping:** formatar e ler de volta; aceitar com e sem máscara; o sequencial de 5 dígitos; os números reais citados na pesquisa (`0181.205014/2026-29` e o caso atípico `0399.001396/2024-23`) lidos corretamente. A captura com os 13 números não foi guardada no repositório (tem nomes de funcionários).
 - **Permissões:** matriz de papel (membro, gestor, leitura, sem lotação, administrador) por ação e por situação do processo.
 - **PDF:** o PDF gerado tem o papel timbrado e o número; o PDF assinado passa na validação do pyHanko com um certificado de teste; adulterar um byte faz a verificação falhar.
 - **Pessoa de fora:** token vencido, código errado 5 vezes, link reaproveitado, CPF que não confere.
