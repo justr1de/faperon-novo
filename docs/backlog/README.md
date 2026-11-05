@@ -19,6 +19,7 @@ Cada épico com escopo definido tem um arquivo próprio (`eNN-*.md`) com objetiv
 | 8 | Avisos por e-mail (SMTP) | Planejado | — | — |
 | 9 | Etapa C do multitenant: visão da FAPERON, conferência das contas dos sindicatos, convênios, auditoria | Planejado | 6, 7 | — |
 | 10 | Melhorias por módulo | Aos poucos | 4 (padrões de lista) | ver abaixo |
+| 11 | **Mesa de processos** (substituta da Ping): núcleo, editor com modelos, assinador próprio, níveis de acesso, importação da Ping, vínculos | **Prioridade desde 05/11/2026**, a pedido do usuário. Desenho em revisão | 5 (só a entrega 6) | [e11-mesa-de-processos.md](e11-mesa-de-processos.md) |
 
 ## Épico 10: melhorias por módulo (lista viva)
 
@@ -35,3 +36,4 @@ Cada épico com escopo definido tem um arquivo próprio (`eNN-*.md`) com objetiv
 
 - `docs/pesquisa/2026-10-27-ux-area-interna.md`: layout e UX de sistemas internos (épicos 4 e 10).
 - `docs/pesquisa/2026-10-27-prestacao-de-contas.md`: prestação de contas, comprovantes, controle e integrações (épicos 6 e 9).
+- `docs/pesquisa/2026-10-28-mesa-de-processos-ux-e-dados.md`, `2026-10-28-sei-e-numeracao.md` e `2026-10-28-ping-sistema-atual.md`: mesa de processos, SEI, numeração e a Ping (épico 11).
